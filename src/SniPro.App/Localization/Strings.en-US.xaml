@@ -47,5 +47,6 @@
     <sys:String x:Key="CaptureOverlayHint">Drag to select a region. Press Enter to confirm or Esc to cancel.</sys:String>
     <sys:String x:Key="TrayCaptureRegionSelected">Capture region selected</sys:String>
     <sys:String x:Key="TrayCaptureRegionCancelled">Capture cancelled</sys:String>
+    <sys:String x:Key="TrayCaptureRegionCancelledMessage">No capture was recorded.</sys:String>
     <sys:String x:Key="TrayCaptureRegionSize">{0} × {1}</sys:String>
 </ResourceDictionary>

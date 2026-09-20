@@ -47,5 +47,6 @@
     <sys:String x:Key="CaptureOverlayHint">拖动鼠标选择区域，按 Enter 确认，按 Esc 取消。</sys:String>
     <sys:String x:Key="TrayCaptureRegionSelected">已选择截屏区域</sys:String>
     <sys:String x:Key="TrayCaptureRegionCancelled">截屏已取消</sys:String>
+    <sys:String x:Key="TrayCaptureRegionCancelledMessage">未生成截屏。</sys:String>
     <sys:String x:Key="TrayCaptureRegionSize">{0} × {1}</sys:String>
 </ResourceDictionary>

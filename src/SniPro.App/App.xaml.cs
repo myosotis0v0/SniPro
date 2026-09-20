@@ -254,7 +254,7 @@ public partial class App : System.Windows.Application
         {
             ShowTrayNotification(
                 _localization?.Get("TrayCaptureRegionCancelled") ?? "Capture cancelled",
-                string.Empty);
+                _localization?.Get("TrayCaptureRegionCancelledMessage") ?? "No capture was recorded.");
         }
     }
 
@@ -285,6 +285,11 @@ public partial class App : System.Windows.Application
 
     private void ShowTrayNotification(string title, string message)
     {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
         _notifyIcon?.ShowBalloonTip(2500, title, message, WinForms.ToolTipIcon.Info);
     }
 
