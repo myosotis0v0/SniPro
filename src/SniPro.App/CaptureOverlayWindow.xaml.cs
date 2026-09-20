@@ -68,8 +68,8 @@ public partial class CaptureOverlayWindow : Window
         _dragStart = point;
         _selectedRegion = null;
         _isDragging = true;
-        SelectionRectangle.Visibility = Visibility.Visible;
-        SelectionInfoBorder.Visibility = Visibility.Visible;
+        SelectionRectangle.Visibility = Visibility.Collapsed;
+        SelectionInfoBorder.Visibility = Visibility.Collapsed;
         Mouse.Capture(OverlayRoot);
         UpdateSelection(point);
         e.Handled = true;
@@ -122,6 +122,7 @@ public partial class CaptureOverlayWindow : Window
         _selectedRegion = region;
         var topLeft = PointFromScreen(new WpfPoint(region.X, region.Y));
         var bottomRight = PointFromScreen(new WpfPoint(region.Right, region.Bottom));
+        SelectionRectangle.Visibility = Visibility.Visible;
         Canvas.SetLeft(SelectionRectangle, topLeft.X);
         Canvas.SetTop(SelectionRectangle, topLeft.Y);
         SelectionRectangle.Width = Math.Max(1, bottomRight.X - topLeft.X);
@@ -135,6 +136,7 @@ public partial class CaptureOverlayWindow : Window
         Canvas.SetTop(SelectionInfoBorder, Math.Max(0, topLeft.Y - infoHeight - 4));
         SelectionInfoBorder.Width = infoWidth;
         SelectionInfoBorder.Height = infoHeight;
+        SelectionInfoBorder.Visibility = Visibility.Visible;
     }
 
     private void Confirm()
