@@ -1,0 +1,34 @@
+<Window x:Class="SniPro.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SniPro"
+        Height="240"
+        Width="420"
+        MinHeight="240"
+        MinWidth="420"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   FontSize="28"
+                   FontWeight="SemiBold"
+                   Text="SniPro" />
+
+        <TextBlock Grid.Row="2"
+                   FontSize="16"
+                   Text="WPF bootstrap is running." />
+
+        <TextBlock x:Name="StageText"
+                   Grid.Row="4"
+                   Foreground="Gray"
+                   TextAlignment="Right" />
+    </Grid>
+</Window>
