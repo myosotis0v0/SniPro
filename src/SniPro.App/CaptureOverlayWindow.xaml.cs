@@ -470,10 +470,13 @@ public partial class CaptureOverlayWindow : Window
 
         if (!_selectionControlsVisible || !TryGetSelectionLayout(out var selection))
         {
+            StartRecordingButton.Visibility = Visibility.Collapsed;
             var initialHintLeft = Math.Max(
                 OverlayControlEdgeMargin,
                 (width - hintSize.Width) / 2);
-            var initialHintTop = OverlayControlEdgeMargin;
+            var initialHintTop = Math.Max(
+                OverlayControlEdgeMargin,
+                (height - hintSize.Height) / 2);
             SetOverlayPosition(HintText, initialHintLeft, initialHintTop);
             return;
         }
