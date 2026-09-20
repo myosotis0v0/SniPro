@@ -40,29 +40,24 @@
             </Border>
         </Canvas>
 
-        <TextBlock x:Name="HintText"
-                   Panel.ZIndex="10"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top"
-                   Margin="32,32,0,0"
-                   Padding="16,8"
-                   MaxWidth="1200"
-                   Foreground="White"
-                   Background="#99000000"
-                   Text="{DynamicResource CaptureOverlayHint}"
-                   TextAlignment="Center"
-                   TextWrapping="Wrap"
-                   IsHitTestVisible="False" />
+        <Canvas x:Name="ControlCanvas"
+                Panel.ZIndex="20">
+            <TextBlock x:Name="HintText"
+                       Padding="16,8"
+                       MaxWidth="1200"
+                       Foreground="White"
+                       Background="#99000000"
+                       Text="{DynamicResource CaptureOverlayHint}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       IsHitTestVisible="False" />
 
-        <Button x:Name="StartRecordingButton"
-                Panel.ZIndex="20"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Margin="0"
-                Padding="18,8"
-                Visibility="Collapsed"
-                Content="{DynamicResource StartRecordingButton}"
-                Click="StartRecordingButton_Click" />
+            <Button x:Name="StartRecordingButton"
+                    Padding="18,8"
+                    Visibility="Collapsed"
+                    Content="{DynamicResource StartRecordingButton}"
+                    Click="StartRecordingButton_Click" />
+        </Canvas>
 
         <Canvas x:Name="HandleCanvas"
                 Panel.ZIndex="15"

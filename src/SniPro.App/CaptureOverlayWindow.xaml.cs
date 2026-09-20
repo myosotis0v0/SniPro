@@ -43,6 +43,7 @@ public partial class CaptureOverlayWindow : Window
     private bool _isDragging;
     private bool _isRecording;
     private bool _stopRequested;
+    private bool _selectionControlsVisible;
 
     public CaptureOverlayWindow(LocalizationService localization)
     {
@@ -156,6 +157,7 @@ public partial class CaptureOverlayWindow : Window
         _activeResizeHandle = ResizeHandle.None;
         _resizeBaseRegion = null;
         Mouse.Capture(null);
+        ShowSelectionControls();
         e.Handled = true;
     }
 
@@ -299,6 +301,38 @@ public partial class CaptureOverlayWindow : Window
         SelectionRectangle.Height = selectionHeight;
 
         SelectionInfoText.Text = $"{region.Width} × {region.Height}";
+        if (_selectionControlsVisible)
+        {
+            UpdateSelectionControls(topLeft, selectionWidth, selectionHeight);
+        }
+        else
+        {
+            SelectionInfoBorder.Visibility = Visibility.Collapsed;
+            SetHandlesVisibility(Visibility.Collapsed);
+        }
+
+        UpdateDimOverlay();
+    }
+
+    private void ShowSelectionControls()
+    {
+        if (_selectedRegion is not { IsValid: true } region)
+        {
+            return;
+        }
+
+        _selectionControlsVisible = true;
+        var topLeft = PointFromScreen(new WpfPoint(region.X, region.Y));
+        var bottomRight = PointFromScreen(new WpfPoint(region.Right, region.Bottom));
+        var selectionWidth = Math.Max(1, bottomRight.X - topLeft.X);
+        var selectionHeight = Math.Max(1, bottomRight.Y - topLeft.Y);
+        UpdateSelectionControls(topLeft, selectionWidth, selectionHeight);
+        StartRecordingButton.Visibility = Visibility.Visible;
+        UpdateOverlayControls();
+    }
+
+    private void UpdateSelectionControls(WpfPoint topLeft, double selectionWidth, double selectionHeight)
+    {
         SelectionInfoBorder.Visibility = Visibility.Visible;
         SelectionInfoBorder.Measure(new WpfSize(double.PositiveInfinity, double.PositiveInfinity));
         var infoWidth = SelectionInfoBorder.DesiredSize.Width;
@@ -315,9 +349,6 @@ public partial class CaptureOverlayWindow : Window
         SetHandlePosition(BottomLeftHandle, topLeft.X, topLeft.Y + selectionHeight);
         SetHandlePosition(BottomRightHandle, topLeft.X + selectionWidth, topLeft.Y + selectionHeight);
         SetHandlesVisibility(Visibility.Visible);
-        StartRecordingButton.Visibility = Visibility.Visible;
-        UpdateDimOverlay();
-        UpdateOverlayControls();
     }
 
     private void StartRecording()
@@ -372,6 +403,7 @@ public partial class CaptureOverlayWindow : Window
         SelectionInfoBorder.Visibility = Visibility.Collapsed;
         StartRecordingButton.Visibility = Visibility.Collapsed;
         StartRecordingButton.IsEnabled = true;
+        _selectionControlsVisible = false;
         HintText.SetResourceReference(TextBlock.TextProperty, "CaptureOverlayHint");
         StartRecordingButton.SetResourceReference(
             ContentControl.ContentProperty,
@@ -436,7 +468,7 @@ public partial class CaptureOverlayWindow : Window
         var availableHintWidth = Math.Max(1, width - OverlayControlEdgeMargin * 2);
         var hintSize = MeasureHint(Math.Min(MaxHintWidth, availableHintWidth));
 
-        if (_selectedRegion is not { } region)
+        if (!_selectionControlsVisible || !TryGetSelectionLayout(out var selection))
         {
             var initialHintLeft = Math.Max(
                 OverlayControlEdgeMargin,
@@ -446,9 +478,9 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
-        var topLeft = PointFromScreen(new WpfPoint(region.X, region.Y));
-        var bottomRight = PointFromScreen(new WpfPoint(region.Right, region.Bottom));
-        var selectionWidth = Math.Max(1, bottomRight.X - topLeft.X);
+        var topLeft = new WpfPoint(selection.Left, selection.Top);
+        var bottomRight = new WpfPoint(selection.Right, selection.Bottom);
+        var selectionWidth = selection.Width;
 
         var hintLeft = ClampToOverlay(
             topLeft.X + (selectionWidth - hintSize.Width) / 2,
@@ -491,6 +523,25 @@ public partial class CaptureOverlayWindow : Window
         SetOverlayPosition(StartRecordingButton, buttonLeft, buttonTop);
     }
 
+    private bool TryGetSelectionLayout(out WpfRect selection)
+    {
+        var left = Canvas.GetLeft(SelectionRectangle);
+        var top = Canvas.GetTop(SelectionRectangle);
+        if (double.IsNaN(left) || double.IsNaN(top) ||
+            SelectionRectangle.Width <= 0 || SelectionRectangle.Height <= 0)
+        {
+            selection = default;
+            return false;
+        }
+
+        selection = new WpfRect(
+            left,
+            top,
+            SelectionRectangle.Width,
+            SelectionRectangle.Height);
+        return true;
+    }
+
     private WpfSize MeasureHint(double maxWidth)
     {
         HintText.Width = double.NaN;
@@ -506,7 +557,8 @@ public partial class CaptureOverlayWindow : Window
 
     private static void SetOverlayPosition(FrameworkElement element, double left, double top)
     {
-        element.Margin = new Thickness(left, top, 0, 0);
+        Canvas.SetLeft(element, left);
+        Canvas.SetTop(element, top);
     }
 
     private static double ClampToOverlay(double value, double elementSize, double overlaySize)
