@@ -24,7 +24,7 @@
 
         <TextBlock Grid.Row="2"
                    FontSize="16"
-                   Text="WPF bootstrap is running." />
+                   Text="Tray shell is running." />
 
         <TextBlock x:Name="StageText"
                    Grid.Row="4"
