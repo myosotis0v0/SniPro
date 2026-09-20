@@ -6,7 +6,6 @@
     <sys:String x:Key="OutputDirectoryLabel">输出目录</sys:String>
     <sys:String x:Key="BrowseButton">浏览...</sys:String>
     <sys:String x:Key="FrameRateLabel">帧率（FPS）</sys:String>
-    <sys:String x:Key="DurationLabel">时长（秒）</sys:String>
     <sys:String x:Key="ScaleLabel">输出缩放（%）</sys:String>
     <sys:String x:Key="MaxColorsLabel">最大颜色数</sys:String>
     <sys:String x:Key="EnableDithering">启用抖动</sys:String>
@@ -27,7 +26,6 @@
     <sys:String x:Key="StatusCaptureRegionSelected">已选择截屏区域：{0} × {1}</sys:String>
     <sys:String x:Key="StatusCaptureRegionCancelled">已取消截屏。</sys:String>
     <sys:String x:Key="ErrorFrameRate">帧率必须在 1 到 30 之间。</sys:String>
-    <sys:String x:Key="ErrorDuration">时长必须在 1 到 60 秒之间。</sys:String>
     <sys:String x:Key="ErrorScale">输出缩放必须在 25% 到 100% 之间。</sys:String>
     <sys:String x:Key="ErrorMaxColors">请选择最大颜色数。</sys:String>
     <sys:String x:Key="ErrorCouldNotSave">设置保存失败：{0}</sys:String>
@@ -45,7 +43,9 @@
     <sys:String x:Key="TrayCaptureHotkeyMessage">截屏覆盖层将在下一阶段加入。</sys:String>
     <sys:String x:Key="CaptureOverlayTitle">选择截屏区域</sys:String>
     <sys:String x:Key="CaptureOverlayHint">拖动选择区域，调整四角后点击“开始录制”。按 Esc 取消。</sys:String>
+    <sys:String x:Key="CaptureOverlayRecordingHint">正在录制。点击“结束录制”或按 Enter 完成。</sys:String>
     <sys:String x:Key="StartRecordingButton">开始录制</sys:String>
+    <sys:String x:Key="StopRecordingButton">结束录制</sys:String>
     <sys:String x:Key="TrayRecordingFailed">录制失败</sys:String>
     <sys:String x:Key="StatusRecordingFailed">无法录制所选区域：{0}</sys:String>
     <sys:String x:Key="PreviewWindowTitle">SniPro 预览</sys:String>

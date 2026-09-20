@@ -15,7 +15,6 @@ public static class AppSettingsDefaults
             SchemaVersion = AppSettings.CurrentSchemaVersion,
             OutputDirectory = outputDirectory,
             FrameRate = 10,
-            DurationSeconds = 5,
             ScalePercent = 100,
             MaxColors = 256,
             EnableDithering = false,

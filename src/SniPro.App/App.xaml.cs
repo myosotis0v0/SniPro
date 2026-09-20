@@ -223,6 +223,7 @@ public partial class App : System.Windows.Application
         {
             _captureOverlay = new CaptureOverlayWindow(_localization);
             _captureOverlay.RecordingRequested += OnCaptureRecordingRequested;
+            _captureOverlay.StopRecordingRequested += OnCaptureStopRecordingRequested;
             _captureOverlay.Cancelled += OnCaptureCancelled;
             _captureOverlay.Closed += OnCaptureOverlayClosed;
             _captureOverlay.Show();
@@ -245,11 +246,6 @@ public partial class App : System.Windows.Application
 
         _isRecording = true;
         _restoreMainWindowAfterCapture = _mainWindow?.IsVisible == true;
-        if (sender is CaptureOverlayWindow overlay)
-        {
-            overlay.Close();
-        }
-
         _mainWindow?.Hide();
         using var cancellation = new CancellationTokenSource();
         _recordingCancellation = cancellation;
@@ -257,29 +253,39 @@ public partial class App : System.Windows.Application
 
         try
         {
-            await Task.Delay(120, cancellation.Token);
             var frames = await ScreenRecorder.RecordAsync(
                 e.Region,
                 settings.FrameRate,
-                settings.DurationSeconds,
                 settings.ScalePercent,
                 cancellation.Token);
 
-            ShowCapturePreview(frames, settings.FrameRate);
-        }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-        {
-            if (!_isExiting)
+            if (sender is CaptureOverlayWindow overlay)
             {
-                RestoreMainWindowAfterCapture();
+                overlay.Close();
             }
+
+            if (_isExiting)
+            {
+                ScreenRecorder.DisposeFrames(frames);
+                return;
+            }
+
+            ShowCapturePreview(frames, settings.FrameRate);
         }
         catch (Exception exception)
         {
-            ShowTrayNotification(
-                _localization.Get("TrayRecordingFailed"),
-                _localization.Format("StatusRecordingFailed", exception.Message));
-            RestoreMainWindowAfterCapture();
+            if (sender is CaptureOverlayWindow overlay)
+            {
+                overlay.Close();
+            }
+
+            if (!_isExiting && _localization is not null)
+            {
+                ShowTrayNotification(
+                    _localization.Get("TrayRecordingFailed"),
+                    _localization.Format("StatusRecordingFailed", exception.Message));
+                RestoreMainWindowAfterCapture();
+            }
         }
         finally
         {
@@ -289,6 +295,14 @@ public partial class App : System.Windows.Application
             }
 
             _isRecording = false;
+        }
+    }
+
+    private void OnCaptureStopRecordingRequested(object? sender, EventArgs e)
+    {
+        if (sender is CaptureOverlayWindow overlay && ReferenceEquals(_captureOverlay, overlay))
+        {
+            _recordingCancellation?.Cancel();
         }
     }
 
@@ -334,6 +348,7 @@ public partial class App : System.Windows.Application
         if (sender is CaptureOverlayWindow overlay)
         {
             overlay.RecordingRequested -= OnCaptureRecordingRequested;
+            overlay.StopRecordingRequested -= OnCaptureStopRecordingRequested;
             overlay.Cancelled -= OnCaptureCancelled;
             overlay.Closed -= OnCaptureOverlayClosed;
         }

@@ -11,44 +11,38 @@ public static class ScreenRecorder
     public static Task<IReadOnlyList<Bitmap>> RecordAsync(
         CaptureRegion region,
         int frameRate,
-        int durationSeconds,
         int scalePercent,
-        CancellationToken cancellationToken = default)
+        CancellationToken stopToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(region.Width);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(region.Height);
         ArgumentOutOfRangeException.ThrowIfLessThan(frameRate, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(durationSeconds, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(scalePercent, 1);
 
         return Task.Run(
-            () => RecordCoreAsync(region, frameRate, durationSeconds, scalePercent, cancellationToken),
-            cancellationToken);
+            () => RecordCoreAsync(region, frameRate, scalePercent, stopToken));
     }
 
     private static async Task<IReadOnlyList<Bitmap>> RecordCoreAsync(
         CaptureRegion region,
         int frameRate,
-        int durationSeconds,
         int scalePercent,
-        CancellationToken cancellationToken)
+        CancellationToken stopToken)
     {
-        var frameCount = checked(frameRate * durationSeconds);
-        var frames = new List<Bitmap>(frameCount);
+        var frames = new List<Bitmap>();
         var stopwatch = Stopwatch.StartNew();
 
         try
         {
-            for (var index = 0; index < frameCount; index++)
+            while (frames.Count == 0 || !stopToken.IsCancellationRequested)
             {
-                cancellationToken.ThrowIfCancellationRequested();
                 frames.Add(CaptureFrame(region, scalePercent));
 
-                var nextFrameTime = TimeSpan.FromSeconds((index + 1d) / frameRate);
+                var nextFrameTime = TimeSpan.FromSeconds(frames.Count / (double)frameRate);
                 var remaining = nextFrameTime - stopwatch.Elapsed;
                 if (remaining > TimeSpan.Zero)
                 {
-                    await Task.Delay(remaining, cancellationToken).ConfigureAwait(false);
+                    await WaitForNextFrameAsync(remaining, stopToken).ConfigureAwait(false);
                 }
             }
 
@@ -58,6 +52,20 @@ public static class ScreenRecorder
         {
             DisposeFrames(frames);
             throw;
+        }
+    }
+
+    private static async Task WaitForNextFrameAsync(
+        TimeSpan remaining,
+        CancellationToken stopToken)
+    {
+        while (remaining > TimeSpan.Zero && !stopToken.IsCancellationRequested)
+        {
+            var delay = remaining > TimeSpan.FromMilliseconds(25)
+                ? TimeSpan.FromMilliseconds(25)
+                : remaining;
+            await Task.Delay(delay).ConfigureAwait(false);
+            remaining -= delay;
         }
     }
 

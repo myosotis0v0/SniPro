@@ -31,7 +31,6 @@ public partial class MainWindow : Window
         _loadedSettings = AppSettingsValidator.Normalize(settings);
         OutputDirectoryTextBox.Text = _loadedSettings.OutputDirectory;
         FrameRateTextBox.Text = _loadedSettings.FrameRate.ToString();
-        DurationTextBox.Text = _loadedSettings.DurationSeconds.ToString();
         ScalePercentTextBox.Text = _loadedSettings.ScalePercent.ToString();
         MaxColorsComboBox.SelectedItem = _loadedSettings.MaxColors;
         EnableDitheringCheckBox.IsChecked = _loadedSettings.EnableDithering;
@@ -117,12 +116,6 @@ public partial class MainWindow : Window
             return false;
         }
 
-        if (!int.TryParse(DurationTextBox.Text, out var duration) || duration is < 1 or > 60)
-        {
-            SetStatus(_localization.Get("ErrorDuration"), WpfBrushes.DarkRed);
-            return false;
-        }
-
         if (!int.TryParse(ScalePercentTextBox.Text, out var scale) || scale is < 25 or > 100)
         {
             SetStatus(_localization.Get("ErrorScale"), WpfBrushes.DarkRed);
@@ -145,7 +138,6 @@ public partial class MainWindow : Window
         }
 
         settings.FrameRate = frameRate;
-        settings.DurationSeconds = duration;
         settings.ScalePercent = scale;
         settings.MaxColors = maxColors;
         settings.EnableDithering = EnableDitheringCheckBox.IsChecked == true;

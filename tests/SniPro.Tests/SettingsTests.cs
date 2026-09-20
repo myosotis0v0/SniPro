@@ -14,7 +14,6 @@ public class SettingsTests
             var settings = new JsonSettingsStore(path).Load();
 
             Assert.Equal(10, settings.FrameRate);
-            Assert.Equal(5, settings.DurationSeconds);
             Assert.Equal(100, settings.ScalePercent);
             Assert.Equal(256, settings.MaxColors);
             Assert.False(settings.EnableDithering);
@@ -38,7 +37,6 @@ public class SettingsTests
             var expected = AppSettingsDefaults.Create();
             expected.OutputDirectory = "C:\\SniPro\\Output";
             expected.FrameRate = 15;
-            expected.DurationSeconds = 12;
             expected.ScalePercent = 75;
             expected.MaxColors = 128;
             expected.EnableDithering = true;
@@ -52,7 +50,6 @@ public class SettingsTests
 
             Assert.Equal(expected.OutputDirectory, actual.OutputDirectory);
             Assert.Equal(expected.FrameRate, actual.FrameRate);
-            Assert.Equal(expected.DurationSeconds, actual.DurationSeconds);
             Assert.Equal(expected.ScalePercent, actual.ScalePercent);
             Assert.Equal(expected.MaxColors, actual.MaxColors);
             Assert.True(actual.EnableDithering);
@@ -93,7 +90,6 @@ public class SettingsTests
         {
             OutputDirectory = " ",
             FrameRate = 99,
-            DurationSeconds = 0,
             ScalePercent = 101,
             MaxColors = 17,
             CaptureHotkey = " ",
@@ -101,7 +97,6 @@ public class SettingsTests
         });
 
         Assert.Equal(30, settings.FrameRate);
-        Assert.Equal(1, settings.DurationSeconds);
         Assert.Equal(100, settings.ScalePercent);
         Assert.Equal(256, settings.MaxColors);
         Assert.False(string.IsNullOrWhiteSpace(settings.OutputDirectory));

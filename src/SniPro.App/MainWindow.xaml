@@ -38,7 +38,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource OutputDirectoryLabel}" />
@@ -48,25 +47,22 @@
             <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource FrameRateLabel}" />
             <TextBox x:Name="FrameRateTextBox" Grid.Row="1" Grid.Column="1" Width="100" HorizontalAlignment="Left" Margin="0,0,0,12" />
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource DurationLabel}" />
-            <TextBox x:Name="DurationTextBox" Grid.Row="2" Grid.Column="1" Width="100" HorizontalAlignment="Left" Margin="0,0,0,12" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource ScaleLabel}" />
+            <TextBox x:Name="ScalePercentTextBox" Grid.Row="2" Grid.Column="1" Width="100" HorizontalAlignment="Left" Margin="0,0,0,12" />
 
-            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource ScaleLabel}" />
-            <TextBox x:Name="ScalePercentTextBox" Grid.Row="3" Grid.Column="1" Width="100" HorizontalAlignment="Left" Margin="0,0,0,12" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource MaxColorsLabel}" />
+            <ComboBox x:Name="MaxColorsComboBox" Grid.Row="3" Grid.Column="1" Width="110" HorizontalAlignment="Left" Margin="0,0,0,12" />
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource MaxColorsLabel}" />
-            <ComboBox x:Name="MaxColorsComboBox" Grid.Row="4" Grid.Column="1" Width="110" HorizontalAlignment="Left" Margin="0,0,0,12" />
+            <CheckBox x:Name="EnableDitheringCheckBox" Grid.Row="4" Grid.Column="1" Margin="0,0,0,4" Content="{DynamicResource EnableDithering}" />
 
-            <CheckBox x:Name="EnableDitheringCheckBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,4" Content="{DynamicResource EnableDithering}" />
+            <TextBlock Grid.Row="5" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource StartupLabel}" />
+            <CheckBox x:Name="StartWithWindowsCheckBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,12" VerticalAlignment="Center" Content="{DynamicResource StartWithWindows}" />
 
-            <TextBlock Grid.Row="6" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource StartupLabel}" />
-            <CheckBox x:Name="StartWithWindowsCheckBox" Grid.Row="6" Grid.Column="1" Margin="0,0,0,12" VerticalAlignment="Center" Content="{DynamicResource StartWithWindows}" />
+            <TextBlock Grid.Row="6" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource CaptureHotkeyLabel}" />
+            <TextBox x:Name="CaptureHotkeyTextBox" Grid.Row="6" Grid.Column="1" Width="160" HorizontalAlignment="Left" Margin="0,0,0,12" />
 
-            <TextBlock Grid.Row="7" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource CaptureHotkeyLabel}" />
-            <TextBox x:Name="CaptureHotkeyTextBox" Grid.Row="7" Grid.Column="1" Width="160" HorizontalAlignment="Left" Margin="0,0,0,12" />
-
-            <TextBlock Grid.Row="8" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource LanguageLabel}" />
-            <ComboBox x:Name="LanguageComboBox" Grid.Row="8" Grid.Column="1" Width="160" HorizontalAlignment="Left" Margin="0,0,0,12" SelectedValuePath="Tag">
+            <TextBlock Grid.Row="7" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource LanguageLabel}" />
+            <ComboBox x:Name="LanguageComboBox" Grid.Row="7" Grid.Column="1" Width="160" HorizontalAlignment="Left" Margin="0,0,0,12" SelectedValuePath="Tag">
                 <ComboBoxItem Tag="system" Content="{DynamicResource LanguageSystem}" />
                 <ComboBoxItem Tag="en-US" Content="{DynamicResource LanguageEnglish}" />
                 <ComboBoxItem Tag="zh-CN" Content="{DynamicResource LanguageSimplifiedChinese}" />

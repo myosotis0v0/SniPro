@@ -41,6 +41,8 @@ public partial class CaptureOverlayWindow : Window
     private (int X, int Y)? _dragStart;
     private ResizeHandle _activeResizeHandle;
     private bool _isDragging;
+    private bool _isRecording;
+    private bool _stopRequested;
 
     public CaptureOverlayWindow(LocalizationService localization)
     {
@@ -55,6 +57,8 @@ public partial class CaptureOverlayWindow : Window
     }
 
     public event EventHandler<CaptureRegionEventArgs>? RecordingRequested;
+
+    public event EventHandler? StopRecordingRequested;
 
     public event EventHandler? Cancelled;
 
@@ -96,6 +100,12 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
+        if (_isRecording)
+        {
+            e.Handled = true;
+            return;
+        }
+
         var point = GetCursorPosition();
         _dragStart = point;
         _resizeBaseRegion = null;
@@ -109,7 +119,7 @@ public partial class CaptureOverlayWindow : Window
 
     private void OverlayRoot_MouseMove(object sender, WpfMouseEventArgs e)
     {
-        if (!_isDragging)
+        if (!_isDragging || _isRecording)
         {
             return;
         }
@@ -127,7 +137,7 @@ public partial class CaptureOverlayWindow : Window
 
     private void OverlayRoot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_isDragging)
+        if (!_isDragging || _isRecording)
         {
             return;
         }
@@ -151,7 +161,8 @@ public partial class CaptureOverlayWindow : Window
 
     private void ResizeHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (_selectedRegion is not { } region ||
+        if (_isRecording ||
+            _selectedRegion is not { } region ||
             sender is not FrameworkElement element ||
             element.Tag is not string tag ||
             !Enum.TryParse(tag, out ResizeHandle resizeHandle))
@@ -168,7 +179,15 @@ public partial class CaptureOverlayWindow : Window
 
     private void StartRecordingButton_Click(object sender, RoutedEventArgs e)
     {
-        StartRecording();
+        if (_isRecording)
+        {
+            StopRecording();
+        }
+        else
+        {
+            StartRecording();
+        }
+
         e.Handled = true;
     }
 
@@ -176,12 +195,28 @@ public partial class CaptureOverlayWindow : Window
     {
         if (e.Key == Key.Escape)
         {
-            Cancel();
+            if (_isRecording)
+            {
+                StopRecording();
+            }
+            else
+            {
+                Cancel();
+            }
+
             e.Handled = true;
         }
         else if (e.Key == Key.Enter)
         {
-            StartRecording();
+            if (_isRecording)
+            {
+                StopRecording();
+            }
+            else
+            {
+                StartRecording();
+            }
+
             e.Handled = true;
         }
     }
@@ -287,17 +322,46 @@ public partial class CaptureOverlayWindow : Window
 
     private void StartRecording()
     {
-        if (_selectedRegion is not { } region || !region.IsValid)
+        if (_isRecording || _selectedRegion is not { } region || !region.IsValid)
         {
             return;
         }
 
-        StartRecordingButton.IsEnabled = false;
+        _isRecording = true;
+        _stopRequested = false;
+        SelectionRectangle.Visibility = Visibility.Collapsed;
+        SelectionInfoBorder.Visibility = Visibility.Collapsed;
+        SetHandlesVisibility(Visibility.Collapsed);
+        HintText.SetResourceReference(TextBlock.TextProperty, "CaptureOverlayRecordingHint");
+        StartRecordingButton.SetResourceReference(
+            ContentControl.ContentProperty,
+            "StopRecordingButton");
+        StartRecordingButton.IsEnabled = true;
+        UpdateDimOverlay();
+        UpdateOverlayControls();
         RecordingRequested?.Invoke(this, new CaptureRegionEventArgs(region));
+    }
+
+    private void StopRecording()
+    {
+        if (!_isRecording || _stopRequested)
+        {
+            return;
+        }
+
+        _stopRequested = true;
+        StartRecordingButton.IsEnabled = false;
+        StopRecordingRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void Cancel()
     {
+        if (_isRecording)
+        {
+            StopRecording();
+            return;
+        }
+
         Cancelled?.Invoke(this, EventArgs.Empty);
         Close();
     }
@@ -307,6 +371,11 @@ public partial class CaptureOverlayWindow : Window
         SelectionRectangle.Visibility = Visibility.Collapsed;
         SelectionInfoBorder.Visibility = Visibility.Collapsed;
         StartRecordingButton.Visibility = Visibility.Collapsed;
+        StartRecordingButton.IsEnabled = true;
+        HintText.SetResourceReference(TextBlock.TextProperty, "CaptureOverlayHint");
+        StartRecordingButton.SetResourceReference(
+            ContentControl.ContentProperty,
+            "StartRecordingButton");
         SetHandlesVisibility(Visibility.Collapsed);
         UpdateDimOverlay();
         UpdateOverlayControls();

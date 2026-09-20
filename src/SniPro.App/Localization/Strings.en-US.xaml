@@ -6,7 +6,6 @@
     <sys:String x:Key="OutputDirectoryLabel">Output directory</sys:String>
     <sys:String x:Key="BrowseButton">Browse...</sys:String>
     <sys:String x:Key="FrameRateLabel">Frame rate (FPS)</sys:String>
-    <sys:String x:Key="DurationLabel">Duration (seconds)</sys:String>
     <sys:String x:Key="ScaleLabel">Output scale (%)</sys:String>
     <sys:String x:Key="MaxColorsLabel">Maximum colors</sys:String>
     <sys:String x:Key="EnableDithering">Enable dithering</sys:String>
@@ -27,7 +26,6 @@
     <sys:String x:Key="StatusCaptureRegionSelected">Capture region selected: {0} × {1}</sys:String>
     <sys:String x:Key="StatusCaptureRegionCancelled">Capture cancelled.</sys:String>
     <sys:String x:Key="ErrorFrameRate">Frame rate must be between 1 and 30.</sys:String>
-    <sys:String x:Key="ErrorDuration">Duration must be between 1 and 60 seconds.</sys:String>
     <sys:String x:Key="ErrorScale">Output scale must be between 25 and 100 percent.</sys:String>
     <sys:String x:Key="ErrorMaxColors">Select a maximum color count.</sys:String>
     <sys:String x:Key="ErrorCouldNotSave">Could not save settings: {0}</sys:String>
@@ -45,7 +43,9 @@
     <sys:String x:Key="TrayCaptureHotkeyMessage">The capture overlay will be added in the next stage.</sys:String>
     <sys:String x:Key="CaptureOverlayTitle">Select capture region</sys:String>
     <sys:String x:Key="CaptureOverlayHint">Drag to select a region, adjust the corners, then click Start recording. Press Esc to cancel.</sys:String>
+    <sys:String x:Key="CaptureOverlayRecordingHint">Recording. Click Stop recording or press Enter to finish.</sys:String>
     <sys:String x:Key="StartRecordingButton">Start recording</sys:String>
+    <sys:String x:Key="StopRecordingButton">Stop recording</sys:String>
     <sys:String x:Key="TrayRecordingFailed">Recording failed</sys:String>
     <sys:String x:Key="StatusRecordingFailed">Could not record the selected region: {0}</sys:String>
     <sys:String x:Key="PreviewWindowTitle">SniPro Preview</sys:String>
