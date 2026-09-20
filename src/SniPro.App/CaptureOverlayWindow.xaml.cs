@@ -30,6 +30,9 @@ public partial class CaptureOverlayWindow : Window
     private const int SwpNoActivate = 0x0010;
     private const int SwpShowWindow = 0x0040;
     private const double HandleSize = 10;
+    private const double OverlayControlEdgeMargin = 24;
+    private const double OverlayControlGap = 8;
+    private const double MaxHintWidth = 720;
     private static readonly IntPtr HwndTopmost = new(-1);
 
     private readonly PixelRect _virtualBounds;
@@ -67,6 +70,7 @@ public partial class CaptureOverlayWindow : Window
             _virtualBounds.Height,
             SwpNoActivate | SwpShowWindow);
         UpdateDimOverlay();
+        UpdateOverlayControls();
         Activate();
         Focus();
     }
@@ -74,6 +78,7 @@ public partial class CaptureOverlayWindow : Window
     private void CaptureOverlayWindow_Loaded(object sender, RoutedEventArgs e)
     {
         UpdateDimOverlay();
+        UpdateOverlayControls();
         Activate();
         Focus();
     }
@@ -81,6 +86,7 @@ public partial class CaptureOverlayWindow : Window
     private void CaptureOverlayWindow_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         UpdateDimOverlay();
+        UpdateOverlayControls();
     }
 
     private void OverlayRoot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -276,6 +282,7 @@ public partial class CaptureOverlayWindow : Window
         SetHandlesVisibility(Visibility.Visible);
         StartRecordingButton.Visibility = Visibility.Visible;
         UpdateDimOverlay();
+        UpdateOverlayControls();
     }
 
     private void StartRecording()
@@ -302,6 +309,7 @@ public partial class CaptureOverlayWindow : Window
         StartRecordingButton.Visibility = Visibility.Collapsed;
         SetHandlesVisibility(Visibility.Collapsed);
         UpdateDimOverlay();
+        UpdateOverlayControls();
     }
 
     private void SetHandlesVisibility(Visibility visibility)
@@ -345,6 +353,97 @@ public partial class CaptureOverlayWindow : Window
             GeometryCombineMode.Exclude,
             outer,
             new RectangleGeometry(selection));
+    }
+
+    private void UpdateOverlayControls()
+    {
+        var width = OverlayRoot.ActualWidth;
+        var height = OverlayRoot.ActualHeight;
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        var availableHintWidth = Math.Max(1, width - OverlayControlEdgeMargin * 2);
+        var hintSize = MeasureHint(Math.Min(MaxHintWidth, availableHintWidth));
+
+        if (_selectedRegion is not { } region)
+        {
+            var initialHintLeft = Math.Max(
+                OverlayControlEdgeMargin,
+                (width - hintSize.Width) / 2);
+            var initialHintTop = OverlayControlEdgeMargin;
+            SetOverlayPosition(HintText, initialHintLeft, initialHintTop);
+            return;
+        }
+
+        var topLeft = PointFromScreen(new WpfPoint(region.X, region.Y));
+        var bottomRight = PointFromScreen(new WpfPoint(region.Right, region.Bottom));
+        var selectionWidth = Math.Max(1, bottomRight.X - topLeft.X);
+
+        var hintLeft = ClampToOverlay(
+            topLeft.X + (selectionWidth - hintSize.Width) / 2,
+            hintSize.Width,
+            width);
+        var hintTop = topLeft.Y - hintSize.Height - OverlayControlGap;
+        if (hintTop < OverlayControlEdgeMargin)
+        {
+            var belowSelectionTop = bottomRight.Y + OverlayControlGap;
+            hintTop = belowSelectionTop + hintSize.Height <= height - OverlayControlEdgeMargin
+                ? belowSelectionTop
+                : OverlayControlEdgeMargin;
+        }
+
+        SetOverlayPosition(HintText, hintLeft, hintTop);
+
+        if (StartRecordingButton.Visibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        StartRecordingButton.Measure(new WpfSize(double.PositiveInfinity, double.PositiveInfinity));
+        var buttonWidth = Math.Max(1, StartRecordingButton.DesiredSize.Width);
+        var buttonHeight = Math.Max(1, StartRecordingButton.DesiredSize.Height);
+        var buttonLeft = bottomRight.X + OverlayControlGap;
+        var buttonTop = bottomRight.Y + OverlayControlGap;
+
+        if (buttonLeft + buttonWidth > width - OverlayControlEdgeMargin)
+        {
+            buttonLeft = bottomRight.X - buttonWidth;
+        }
+
+        if (buttonTop + buttonHeight > height - OverlayControlEdgeMargin)
+        {
+            buttonTop = bottomRight.Y - buttonHeight;
+        }
+
+        buttonLeft = ClampToOverlay(buttonLeft, buttonWidth, width);
+        buttonTop = ClampToOverlay(buttonTop, buttonHeight, height);
+        SetOverlayPosition(StartRecordingButton, buttonLeft, buttonTop);
+    }
+
+    private WpfSize MeasureHint(double maxWidth)
+    {
+        HintText.Width = double.NaN;
+        HintText.Height = double.NaN;
+        HintText.MaxWidth = maxWidth;
+        HintText.Measure(new WpfSize(maxWidth, double.PositiveInfinity));
+
+        var width = Math.Min(maxWidth, Math.Max(1, HintText.DesiredSize.Width));
+        HintText.Width = width;
+        HintText.Measure(new WpfSize(width, double.PositiveInfinity));
+        return new WpfSize(width, Math.Max(1, HintText.DesiredSize.Height));
+    }
+
+    private static void SetOverlayPosition(FrameworkElement element, double left, double top)
+    {
+        element.Margin = new Thickness(left, top, 0, 0);
+    }
+
+    private static double ClampToOverlay(double value, double elementSize, double overlaySize)
+    {
+        var max = Math.Max(OverlayControlEdgeMargin, overlaySize - OverlayControlEdgeMargin - elementSize);
+        return Math.Clamp(value, OverlayControlEdgeMargin, max);
     }
 
     private (int X, int Y) GetCursorPosition()
