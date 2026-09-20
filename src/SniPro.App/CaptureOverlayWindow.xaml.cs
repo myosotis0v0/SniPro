@@ -36,6 +36,7 @@ public partial class CaptureOverlayWindow : Window
     private static readonly IntPtr HwndTopmost = new(-1);
 
     private readonly PixelRect _virtualBounds;
+    private readonly PixelRect _initialMonitorBounds;
     private CaptureRegion? _selectedRegion;
     private CaptureRegion? _resizeBaseRegion;
     private (int X, int Y)? _dragStart;
@@ -49,6 +50,8 @@ public partial class CaptureOverlayWindow : Window
     {
         ArgumentNullException.ThrowIfNull(localization);
         _virtualBounds = ScreenGeometry.GetVirtualScreenBounds();
+        var cursor = GetCursorPosition();
+        _initialMonitorBounds = ScreenGeometry.GetMonitorBounds(cursor.X, cursor.Y);
 
         InitializeComponent();
         SourceInitialized += CaptureOverlayWindow_SourceInitialized;
@@ -471,12 +474,16 @@ public partial class CaptureOverlayWindow : Window
         if (!_selectionControlsVisible || !TryGetSelectionLayout(out var selection))
         {
             StartRecordingButton.Visibility = Visibility.Collapsed;
-            var initialHintLeft = Math.Max(
-                OverlayControlEdgeMargin,
-                (width - hintSize.Width) / 2);
-            var initialHintTop = Math.Max(
-                OverlayControlEdgeMargin,
-                (height - hintSize.Height) / 2);
+            var monitorTopLeft = PointFromScreen(
+                new WpfPoint(_initialMonitorBounds.X, _initialMonitorBounds.Y));
+            var monitorBottomRight = PointFromScreen(
+                new WpfPoint(_initialMonitorBounds.Right, _initialMonitorBounds.Bottom));
+            var monitorWidth = Math.Max(1, monitorBottomRight.X - monitorTopLeft.X);
+            var monitorHeight = Math.Max(1, monitorBottomRight.Y - monitorTopLeft.Y);
+            var initialHintLeft = monitorTopLeft.X + (monitorWidth - hintSize.Width) / 2;
+            var initialHintTop = monitorTopLeft.Y + (monitorHeight - hintSize.Height) / 2;
+            initialHintLeft = ClampToOverlay(initialHintLeft, hintSize.Width, width);
+            initialHintTop = ClampToOverlay(initialHintTop, hintSize.Height, height);
             SetOverlayPosition(HintText, initialHintLeft, initialHintTop);
             return;
         }
