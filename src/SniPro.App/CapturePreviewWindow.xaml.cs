@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Collections.Specialized;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -172,8 +173,7 @@ public partial class CapturePreviewWindow : Window
                 maxColors: _maxColors,
                 enableDithering: _enableDithering);
 
-            var gifBytes = await File.ReadAllBytesAsync(filePath, cancellation.Token);
-            if (TryCopyGifToClipboard(gifBytes))
+            if (TryCopyGifToClipboard(filePath))
             {
                 SaveStatusText.Foreground = WpfBrushes.DarkGreen;
                 SaveStatusText.Text = _localization.Format("PreviewSaved", filePath);
@@ -236,173 +236,35 @@ public partial class CapturePreviewWindow : Window
             : null;
     }
 
-    private static bool TryCopyGifToClipboard(byte[] gifBytes)
+    private static bool TryCopyGifToClipboard(string filePath)
     {
-        if (gifBytes.Length == 0)
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
         {
             return false;
         }
 
-        var gifFormat = NativeClipboard.RegisterFormat("GIF");
-        var imageGifFormat = NativeClipboard.RegisterFormat("image/gif");
-        if (gifFormat == 0 || imageGifFormat == 0)
+        try
+        {
+            var files = new StringCollection();
+            files.Add(Path.GetFullPath(filePath));
+
+            var data = new WinForms.DataObject();
+            data.SetFileDropList(files);
+            WinForms.Clipboard.SetDataObject(
+                data,
+                copy: true,
+                retryTimes: 20,
+                retryDelay: 100);
+            return true;
+        }
+        catch (ExternalException)
         {
             return false;
         }
-
-        var gifData = NativeClipboard.Allocate(gifBytes);
-        var imageGifData = NativeClipboard.Allocate(gifBytes);
-        if (gifData == IntPtr.Zero || imageGifData == IntPtr.Zero)
+        catch (InvalidOperationException)
         {
-            NativeClipboard.Free(gifData);
-            NativeClipboard.Free(imageGifData);
             return false;
         }
-
-        for (var attempt = 0; attempt < 5; attempt++)
-        {
-            if (NativeClipboard.Open())
-            {
-                try
-                {
-                    if (!NativeClipboard.Empty())
-                    {
-                        return false;
-                    }
-
-                    if (NativeClipboard.SetData(gifFormat, gifData) == IntPtr.Zero)
-                    {
-                        return false;
-                    }
-
-                    gifData = IntPtr.Zero;
-                    if (NativeClipboard.SetData(imageGifFormat, imageGifData) == IntPtr.Zero)
-                    {
-                        return false;
-                    }
-
-                    imageGifData = IntPtr.Zero;
-                    return true;
-                }
-                finally
-                {
-                    NativeClipboard.Close();
-                    NativeClipboard.Free(gifData);
-                    NativeClipboard.Free(imageGifData);
-                }
-            }
-
-            Thread.Sleep(50);
-        }
-
-        NativeClipboard.Free(gifData);
-        NativeClipboard.Free(imageGifData);
-        return false;
-    }
-
-    private static class NativeClipboard
-    {
-        private const uint GlobalMoveable = 0x0002;
-
-        public static uint RegisterFormat(string format)
-        {
-            return RegisterClipboardFormat(format);
-        }
-
-        public static IntPtr Allocate(byte[] data)
-        {
-            var handle = GlobalAlloc(GlobalMoveable, (UIntPtr)data.Length);
-            if (handle == IntPtr.Zero)
-            {
-                return IntPtr.Zero;
-            }
-
-            var pointer = GlobalLock(handle);
-            if (pointer == IntPtr.Zero)
-            {
-                GlobalFree(handle);
-                return IntPtr.Zero;
-            }
-
-            var copySucceeded = false;
-            try
-            {
-                Marshal.Copy(data, 0, pointer, data.Length);
-                copySucceeded = true;
-                return handle;
-            }
-            catch
-            {
-                return IntPtr.Zero;
-            }
-            finally
-            {
-                GlobalUnlock(handle);
-                if (!copySucceeded)
-                {
-                    GlobalFree(handle);
-                }
-            }
-        }
-
-        public static void Free(IntPtr handle)
-        {
-            if (handle != IntPtr.Zero)
-            {
-                GlobalFree(handle);
-            }
-        }
-
-        public static bool Open()
-        {
-            return OpenClipboard(IntPtr.Zero);
-        }
-
-        public static bool Empty()
-        {
-            return EmptyClipboard();
-        }
-
-        public static IntPtr SetData(uint format, IntPtr data)
-        {
-            return SetClipboardData(format, data);
-        }
-
-        public static void Close()
-        {
-            CloseClipboard();
-        }
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern uint RegisterClipboardFormat(string format);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool OpenClipboard(IntPtr newOwner);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool EmptyClipboard();
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern IntPtr SetClipboardData(uint format, IntPtr data);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool CloseClipboard();
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GlobalAlloc(uint flags, UIntPtr bytes);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GlobalLock(IntPtr handle);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool GlobalUnlock(IntPtr handle);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GlobalFree(IntPtr handle);
     }
 
     private void PlayTimer_Tick(object? sender, EventArgs e)
