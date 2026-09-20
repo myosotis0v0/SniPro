@@ -15,6 +15,7 @@ public partial class App : System.Windows.Application
     private JsonSettingsStore? _settingsStore;
     private StartupManager? _startupManager;
     private GlobalHotkeyHost? _hotkeyHost;
+    private CaptureOverlayWindow? _captureOverlay;
     private LocalizationService? _localization;
     private WinForms.ToolStripMenuItem? _openTrayItem;
     private WinForms.ToolStripMenuItem? _exitTrayItem;
@@ -201,16 +202,72 @@ public partial class App : System.Windows.Application
 
     private void OnCaptureHotkeyPressed(object? sender, EventArgs e)
     {
+        BeginCapture();
+    }
+
+    private void BeginCapture()
+    {
+        if (_captureOverlay is not null || _localization is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _captureOverlay = new CaptureOverlayWindow(_localization);
+            _captureOverlay.RegionConfirmed += OnCaptureRegionConfirmed;
+            _captureOverlay.Cancelled += OnCaptureCancelled;
+            _captureOverlay.Closed += OnCaptureOverlayClosed;
+            _captureOverlay.Show();
+        }
+        catch (Exception exception)
+        {
+            _captureOverlay = null;
+            ShowTrayNotification(
+                _localization.Get("TrayGlobalHotkeyUnavailable"),
+                exception.Message);
+        }
+    }
+
+    private void OnCaptureRegionConfirmed(object? sender, CaptureRegionEventArgs e)
+    {
         if (_mainWindow?.IsVisible == true)
         {
-            _mainWindow.ShowCaptureHotkeyReceived();
+            _mainWindow.ShowCaptureRegionSelected(e.Region);
         }
         else
         {
             ShowTrayNotification(
-                _localization?.Get("TrayCaptureHotkeyTitle") ?? "Capture hotkey received",
-                _localization?.Get("TrayCaptureHotkeyMessage") ?? "The capture overlay will be added in the next stage.");
+                _localization?.Get("TrayCaptureRegionSelected") ?? "Capture region selected",
+                _localization?.Format("TrayCaptureRegionSize", e.Region.Width, e.Region.Height)
+                    ?? $"{e.Region.Width} × {e.Region.Height}");
         }
+    }
+
+    private void OnCaptureCancelled(object? sender, EventArgs e)
+    {
+        if (_mainWindow?.IsVisible == true)
+        {
+            _mainWindow.ShowCaptureCancelled();
+        }
+        else
+        {
+            ShowTrayNotification(
+                _localization?.Get("TrayCaptureRegionCancelled") ?? "Capture cancelled",
+                string.Empty);
+        }
+    }
+
+    private void OnCaptureOverlayClosed(object? sender, EventArgs e)
+    {
+        if (sender is CaptureOverlayWindow overlay)
+        {
+            overlay.RegionConfirmed -= OnCaptureRegionConfirmed;
+            overlay.Cancelled -= OnCaptureCancelled;
+            overlay.Closed -= OnCaptureOverlayClosed;
+        }
+
+        _captureOverlay = null;
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
@@ -250,6 +307,9 @@ public partial class App : System.Windows.Application
 
     private void OnExit(object sender, ExitEventArgs e)
     {
+        _captureOverlay?.Close();
+        _captureOverlay = null;
+
         if (_localization is not null)
         {
             _localization.LanguageChanged -= OnLanguageChanged;

@@ -24,6 +24,8 @@
     <sys:String x:Key="StatusSettingsSaved">Settings saved.</sys:String>
     <sys:String x:Key="StatusDefaultsLoaded">Defaults loaded. Click Save to persist them.</sys:String>
     <sys:String x:Key="StatusCaptureHotkeyReceived">Capture hotkey received. The capture overlay will be added in the next stage.</sys:String>
+    <sys:String x:Key="StatusCaptureRegionSelected">Capture region selected: {0} × {1}</sys:String>
+    <sys:String x:Key="StatusCaptureRegionCancelled">Capture cancelled.</sys:String>
     <sys:String x:Key="ErrorFrameRate">Frame rate must be between 1 and 30.</sys:String>
     <sys:String x:Key="ErrorDuration">Duration must be between 1 and 60 seconds.</sys:String>
     <sys:String x:Key="ErrorScale">Output scale must be between 25 and 100 percent.</sys:String>
@@ -41,4 +43,9 @@
     <sys:String x:Key="TrayGlobalHotkeyUnavailable">Global hotkey unavailable</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyTitle">Capture hotkey received</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyMessage">The capture overlay will be added in the next stage.</sys:String>
+    <sys:String x:Key="CaptureOverlayTitle">Select capture region</sys:String>
+    <sys:String x:Key="CaptureOverlayHint">Drag to select a region. Press Enter to confirm or Esc to cancel.</sys:String>
+    <sys:String x:Key="TrayCaptureRegionSelected">Capture region selected</sys:String>
+    <sys:String x:Key="TrayCaptureRegionCancelled">Capture cancelled</sys:String>
+    <sys:String x:Key="TrayCaptureRegionSize">{0} × {1}</sys:String>
 </ResourceDictionary>

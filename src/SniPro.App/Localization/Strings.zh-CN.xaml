@@ -24,6 +24,8 @@
     <sys:String x:Key="StatusSettingsSaved">设置已保存。</sys:String>
     <sys:String x:Key="StatusDefaultsLoaded">默认值已加载。点击“保存”后才会写入。</sys:String>
     <sys:String x:Key="StatusCaptureHotkeyReceived">已收到截屏快捷键。截屏覆盖层将在下一阶段加入。</sys:String>
+    <sys:String x:Key="StatusCaptureRegionSelected">已选择截屏区域：{0} × {1}</sys:String>
+    <sys:String x:Key="StatusCaptureRegionCancelled">已取消截屏。</sys:String>
     <sys:String x:Key="ErrorFrameRate">帧率必须在 1 到 30 之间。</sys:String>
     <sys:String x:Key="ErrorDuration">时长必须在 1 到 60 秒之间。</sys:String>
     <sys:String x:Key="ErrorScale">输出缩放必须在 25% 到 100% 之间。</sys:String>
@@ -41,4 +43,9 @@
     <sys:String x:Key="TrayGlobalHotkeyUnavailable">全局快捷键不可用</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyTitle">已收到截屏快捷键</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyMessage">截屏覆盖层将在下一阶段加入。</sys:String>
+    <sys:String x:Key="CaptureOverlayTitle">选择截屏区域</sys:String>
+    <sys:String x:Key="CaptureOverlayHint">拖动鼠标选择区域，按 Enter 确认，按 Esc 取消。</sys:String>
+    <sys:String x:Key="TrayCaptureRegionSelected">已选择截屏区域</sys:String>
+    <sys:String x:Key="TrayCaptureRegionCancelled">截屏已取消</sys:String>
+    <sys:String x:Key="TrayCaptureRegionSize">{0} × {1}</sys:String>
 </ResourceDictionary>
