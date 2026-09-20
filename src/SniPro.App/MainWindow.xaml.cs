@@ -10,11 +10,16 @@ namespace SniPro.App;
 public partial class MainWindow : Window
 {
     private readonly Action<AppSettings> _saveSettings;
+    private readonly LocalizationService _localization;
     private AppSettings _loadedSettings = AppSettingsDefaults.Create();
 
-    public MainWindow(AppSettings initialSettings, Action<AppSettings> saveSettings)
+    public MainWindow(
+        AppSettings initialSettings,
+        Action<AppSettings> saveSettings,
+        LocalizationService localization)
     {
         _saveSettings = saveSettings;
+        _localization = localization;
 
         InitializeComponent();
         MaxColorsComboBox.ItemsSource = new[] { 32, 64, 128, 256 };
@@ -32,14 +37,17 @@ public partial class MainWindow : Window
         EnableDitheringCheckBox.IsChecked = _loadedSettings.EnableDithering;
         StartWithWindowsCheckBox.IsChecked = _loadedSettings.StartWithWindows;
         CaptureHotkeyTextBox.Text = _loadedSettings.CaptureHotkey;
-        SetStatus("Settings loaded.", WpfBrushes.Gray);
+        LanguageComboBox.SelectedValue = IsSupportedLanguageCode(_loadedSettings.LanguageCode)
+            ? _loadedSettings.LanguageCode
+            : LanguageCodes.System;
+        SetStatus(_localization.Get("StatusSettingsLoaded"), WpfBrushes.Gray);
     }
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
         using var dialog = new WinForms.FolderBrowserDialog
         {
-            Description = "Choose where GIF files should be saved.",
+            Description = _localization.Get("OutputDirectoryLabel"),
             SelectedPath = OutputDirectoryTextBox.Text
         };
 
@@ -60,18 +68,20 @@ public partial class MainWindow : Window
         {
             _saveSettings(settings);
             _loadedSettings = settings;
-            SetStatus("Settings saved.", WpfBrushes.DarkGreen);
+            SetStatus(_localization.Get("StatusSettingsSaved"), WpfBrushes.DarkGreen);
         }
         catch (Exception exception)
         {
-            SetStatus($"Could not save settings: {exception.Message}", WpfBrushes.DarkRed);
+            SetStatus(
+                _localization.Format("ErrorCouldNotSave", exception.Message),
+                WpfBrushes.DarkRed);
         }
     }
 
     private void ResetButton_Click(object sender, RoutedEventArgs e)
     {
         LoadSettings(AppSettingsDefaults.Create());
-        SetStatus("Defaults loaded. Click Save to persist them.", WpfBrushes.Gray);
+        SetStatus(_localization.Get("StatusDefaultsLoaded"), WpfBrushes.Gray);
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -81,7 +91,7 @@ public partial class MainWindow : Window
 
     public void ShowCaptureHotkeyReceived()
     {
-        SetStatus("Capture hotkey received. The capture overlay will be added in the next stage.", WpfBrushes.DarkBlue);
+        SetStatus(_localization.Get("StatusCaptureHotkeyReceived"), WpfBrushes.DarkBlue);
     }
 
     private bool TryBuildSettings(out AppSettings settings)
@@ -91,31 +101,34 @@ public partial class MainWindow : Window
 
         if (!int.TryParse(FrameRateTextBox.Text, out var frameRate) || frameRate is < 1 or > 30)
         {
-            SetStatus("Frame rate must be between 1 and 30.", WpfBrushes.DarkRed);
+            SetStatus(_localization.Get("ErrorFrameRate"), WpfBrushes.DarkRed);
             return false;
         }
 
         if (!int.TryParse(DurationTextBox.Text, out var duration) || duration is < 1 or > 60)
         {
-            SetStatus("Duration must be between 1 and 60 seconds.", WpfBrushes.DarkRed);
+            SetStatus(_localization.Get("ErrorDuration"), WpfBrushes.DarkRed);
             return false;
         }
 
         if (!int.TryParse(ScalePercentTextBox.Text, out var scale) || scale is < 25 or > 100)
         {
-            SetStatus("Output scale must be between 25 and 100 percent.", WpfBrushes.DarkRed);
+            SetStatus(_localization.Get("ErrorScale"), WpfBrushes.DarkRed);
             return false;
         }
 
         if (MaxColorsComboBox.SelectedItem is not int maxColors)
         {
-            SetStatus("Select a maximum color count.", WpfBrushes.DarkRed);
+            SetStatus(_localization.Get("ErrorMaxColors"), WpfBrushes.DarkRed);
             return false;
         }
 
-        if (!GlobalHotkeyParser.TryParse(CaptureHotkeyTextBox.Text, out var hotkey, out var hotkeyError))
+        if (!GlobalHotkeyParser.TryParseWithCode(
+                CaptureHotkeyTextBox.Text,
+                out var hotkey,
+                out var hotkeyError))
         {
-            SetStatus(hotkeyError, WpfBrushes.DarkRed);
+            SetStatus(_localization.GetHotkeyError(hotkeyError), WpfBrushes.DarkRed);
             return false;
         }
 
@@ -126,8 +139,14 @@ public partial class MainWindow : Window
         settings.EnableDithering = EnableDitheringCheckBox.IsChecked == true;
         settings.StartWithWindows = StartWithWindowsCheckBox.IsChecked == true;
         settings.CaptureHotkey = hotkey.CanonicalText;
+        settings.LanguageCode = LanguageComboBox.SelectedValue as string ?? LanguageCodes.System;
         settings = AppSettingsValidator.Normalize(settings);
         return true;
+    }
+
+    private static bool IsSupportedLanguageCode(string languageCode)
+    {
+        return languageCode is LanguageCodes.System or LanguageCodes.English or LanguageCodes.SimplifiedChinese;
     }
 
     private void SetStatus(string message, WpfBrush color)

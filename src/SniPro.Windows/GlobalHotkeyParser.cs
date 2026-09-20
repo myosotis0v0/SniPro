@@ -5,6 +5,17 @@ public readonly record struct GlobalHotkeyDefinition(
     uint VirtualKey,
     string CanonicalText);
 
+public enum GlobalHotkeyParseError
+{
+    None,
+    Empty,
+    MissingModifier,
+    DuplicateModifier,
+    MultipleKeys,
+    MissingKey,
+    UnsupportedKey
+}
+
 public static class GlobalHotkeyParser
 {
     public const uint ModAlt = 0x0001;
@@ -18,19 +29,29 @@ public static class GlobalHotkeyParser
         out GlobalHotkeyDefinition definition,
         out string error)
     {
+        var parsed = TryParseWithCode(text, out definition, out var errorCode);
+        error = GetErrorMessage(errorCode);
+        return parsed;
+    }
+
+    public static bool TryParseWithCode(
+        string? text,
+        out GlobalHotkeyDefinition definition,
+        out GlobalHotkeyParseError error)
+    {
         definition = default;
-        error = string.Empty;
+        error = GlobalHotkeyParseError.None;
 
         if (string.IsNullOrWhiteSpace(text))
         {
-            error = "Enter a hotkey such as Ctrl+Shift+G.";
+            error = GlobalHotkeyParseError.Empty;
             return false;
         }
 
         var tokens = text.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (tokens.Length < 2)
         {
-            error = "A hotkey must contain at least one modifier and one key.";
+            error = GlobalHotkeyParseError.MissingModifier;
             return false;
         }
 
@@ -43,7 +64,7 @@ public static class GlobalHotkeyParser
             {
                 if ((modifiers & modifier) != 0)
                 {
-                    error = $"The modifier '{token}' is repeated.";
+                    error = GlobalHotkeyParseError.DuplicateModifier;
                     return false;
                 }
 
@@ -53,7 +74,7 @@ public static class GlobalHotkeyParser
 
             if (keyToken is not null)
             {
-                error = "Enter only one non-modifier key.";
+                error = GlobalHotkeyParseError.MultipleKeys;
                 return false;
             }
 
@@ -62,13 +83,13 @@ public static class GlobalHotkeyParser
 
         if (keyToken is null)
         {
-            error = "Enter a key after the modifier(s).";
+            error = GlobalHotkeyParseError.MissingKey;
             return false;
         }
 
         if (!TryGetVirtualKey(keyToken, out var virtualKey, out var canonicalKey))
         {
-            error = $"Unsupported key '{keyToken}'. Use A-Z, 0-9, or F1-F12.";
+            error = GlobalHotkeyParseError.UnsupportedKey;
             return false;
         }
 
@@ -77,6 +98,20 @@ public static class GlobalHotkeyParser
             virtualKey,
             $"{FormatModifiers(modifiers)}{canonicalKey}");
         return true;
+    }
+
+    public static string GetErrorMessage(GlobalHotkeyParseError error)
+    {
+        return error switch
+        {
+            GlobalHotkeyParseError.Empty => "Enter a hotkey such as Ctrl+Shift+G.",
+            GlobalHotkeyParseError.MissingModifier => "A hotkey must contain at least one modifier and one key.",
+            GlobalHotkeyParseError.DuplicateModifier => "The modifier is repeated.",
+            GlobalHotkeyParseError.MultipleKeys => "Enter only one non-modifier key.",
+            GlobalHotkeyParseError.MissingKey => "Enter a key after the modifier(s).",
+            GlobalHotkeyParseError.UnsupportedKey => "Use A-Z, 0-9, or F1-F12.",
+            _ => string.Empty
+        };
     }
 
     private static bool TryGetModifier(string token, out uint modifier)

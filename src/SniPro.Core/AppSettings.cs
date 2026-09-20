@@ -22,6 +22,8 @@ public sealed class AppSettings
 
     public string CaptureHotkey { get; set; } = "Ctrl+Shift+G";
 
+    public string LanguageCode { get; set; } = LanguageCodes.System;
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -34,7 +36,8 @@ public sealed class AppSettings
             MaxColors = MaxColors,
             EnableDithering = EnableDithering,
             StartWithWindows = StartWithWindows,
-            CaptureHotkey = CaptureHotkey
+            CaptureHotkey = CaptureHotkey,
+            LanguageCode = LanguageCode
         };
     }
 }

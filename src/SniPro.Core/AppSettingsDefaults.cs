@@ -20,7 +20,8 @@ public static class AppSettingsDefaults
             MaxColors = 256,
             EnableDithering = false,
             StartWithWindows = false,
-            CaptureHotkey = "Ctrl+Shift+G"
+            CaptureHotkey = "Ctrl+Shift+G",
+            LanguageCode = LanguageCodes.System
         };
     }
 }

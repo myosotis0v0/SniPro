@@ -24,6 +24,9 @@ public static class AppSettingsValidator
         normalized.CaptureHotkey = string.IsNullOrWhiteSpace(normalized.CaptureHotkey)
             ? defaults.CaptureHotkey
             : normalized.CaptureHotkey.Trim();
+        normalized.LanguageCode = string.IsNullOrWhiteSpace(normalized.LanguageCode)
+            ? defaults.LanguageCode
+            : normalized.LanguageCode.Trim();
 
         return normalized;
     }

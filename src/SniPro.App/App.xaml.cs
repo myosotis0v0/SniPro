@@ -15,6 +15,9 @@ public partial class App : System.Windows.Application
     private JsonSettingsStore? _settingsStore;
     private StartupManager? _startupManager;
     private GlobalHotkeyHost? _hotkeyHost;
+    private LocalizationService? _localization;
+    private WinForms.ToolStripMenuItem? _openTrayItem;
+    private WinForms.ToolStripMenuItem? _exitTrayItem;
     private AppSettings _settings = AppSettingsDefaults.Create();
     private bool _isExiting;
 
@@ -31,10 +34,13 @@ public partial class App : System.Windows.Application
         _singleInstanceMutex = mutex;
         _settingsStore = new JsonSettingsStore(SettingsFilePath.GetDefault());
         _settings = _settingsStore.Load();
+        _localization = new LocalizationService();
+        _localization.LanguageChanged += OnLanguageChanged;
+        _localization.Apply(_settings.LanguageCode);
         _startupManager = new StartupManager(
             SniProIdentity.Name,
             Environment.ProcessPath ?? throw new InvalidOperationException("The process path is unavailable."));
-        _mainWindow = new MainWindow(_settings, SaveSettings);
+        _mainWindow = new MainWindow(_settings, SaveSettings, _localization);
         _mainWindow.Closing += OnMainWindowClosing;
 
         CreateTrayIcon();
@@ -44,7 +50,9 @@ public partial class App : System.Windows.Application
         _hotkeyHost.HotkeyPressed += OnCaptureHotkeyPressed;
         if (!TryRegisterCaptureHotkey(_settings.CaptureHotkey, out var hotkeyError))
         {
-            ShowTrayNotification("Global hotkey unavailable", hotkeyError);
+            ShowTrayNotification(
+                _localization.Get("TrayGlobalHotkeyUnavailable"),
+                hotkeyError);
         }
 
         if (e.Args.Any(argument => string.Equals(argument, "--show", StringComparison.OrdinalIgnoreCase)))
@@ -56,15 +64,15 @@ public partial class App : System.Windows.Application
     private void CreateTrayIcon()
     {
         var contextMenu = new WinForms.ContextMenuStrip();
-        var openItem = new WinForms.ToolStripMenuItem("Open");
-        openItem.Click += (_, _) => ShowMainWindow();
+        _openTrayItem = new WinForms.ToolStripMenuItem(_localization?.Get("TrayOpen") ?? "Open");
+        _openTrayItem.Click += (_, _) => ShowMainWindow();
 
-        var exitItem = new WinForms.ToolStripMenuItem("Exit");
-        exitItem.Click += (_, _) => ExitApplication();
+        _exitTrayItem = new WinForms.ToolStripMenuItem(_localization?.Get("TrayExit") ?? "Exit");
+        _exitTrayItem.Click += (_, _) => ExitApplication();
 
-        contextMenu.Items.Add(openItem);
+        contextMenu.Items.Add(_openTrayItem);
         contextMenu.Items.Add(new WinForms.ToolStripSeparator());
-        contextMenu.Items.Add(exitItem);
+        contextMenu.Items.Add(_exitTrayItem);
 
         _notifyIcon = new WinForms.NotifyIcon
         {
@@ -100,7 +108,7 @@ public partial class App : System.Windows.Application
 
     private void SaveSettings(AppSettings settings)
     {
-        if (_settingsStore is null || _startupManager is null || _hotkeyHost is null)
+        if (_settingsStore is null || _startupManager is null || _hotkeyHost is null || _localization is null)
         {
             throw new InvalidOperationException("The application services are not initialized.");
         }
@@ -111,6 +119,7 @@ public partial class App : System.Windows.Application
 
         try
         {
+            _localization.Apply(normalized.LanguageCode);
             _startupManager.Apply(normalized.StartWithWindows);
             if (!TryRegisterCaptureHotkey(normalized.CaptureHotkey, out var hotkeyError))
             {
@@ -131,6 +140,15 @@ public partial class App : System.Windows.Application
         try
         {
             _settingsStore?.Save(settings);
+        }
+        catch
+        {
+            // Preserve the original save error for the settings window.
+        }
+
+        try
+        {
+            _localization?.Apply(settings.LanguageCode);
         }
         catch
         {
@@ -164,7 +182,9 @@ public partial class App : System.Windows.Application
         }
         catch (Exception exception) when (notifyOnFailure)
         {
-            ShowTrayNotification("Startup setting unavailable", exception.Message);
+            ShowTrayNotification(
+                _localization?.Get("TrayStartupUnavailable") ?? "Startup setting unavailable",
+                exception.Message);
         }
     }
 
@@ -187,7 +207,22 @@ public partial class App : System.Windows.Application
         }
         else
         {
-            ShowTrayNotification("Capture hotkey received", "The capture overlay will be added in the next stage.");
+            ShowTrayNotification(
+                _localization?.Get("TrayCaptureHotkeyTitle") ?? "Capture hotkey received",
+                _localization?.Get("TrayCaptureHotkeyMessage") ?? "The capture overlay will be added in the next stage.");
+        }
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        if (_openTrayItem is not null)
+        {
+            _openTrayItem.Text = _localization?.Get("TrayOpen") ?? "Open";
+        }
+
+        if (_exitTrayItem is not null)
+        {
+            _exitTrayItem.Text = _localization?.Get("TrayExit") ?? "Exit";
         }
     }
 
@@ -215,6 +250,12 @@ public partial class App : System.Windows.Application
 
     private void OnExit(object sender, ExitEventArgs e)
     {
+        if (_localization is not null)
+        {
+            _localization.LanguageChanged -= OnLanguageChanged;
+            _localization = null;
+        }
+
         if (_hotkeyHost is not null)
         {
             _hotkeyHost.HotkeyPressed -= OnCaptureHotkeyPressed;

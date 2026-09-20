@@ -20,6 +20,7 @@ public class SettingsTests
             Assert.False(settings.EnableDithering);
             Assert.False(settings.StartWithWindows);
             Assert.Equal("Ctrl+Shift+G", settings.CaptureHotkey);
+            Assert.Equal(LanguageCodes.System, settings.LanguageCode);
         }
         finally
         {
@@ -43,6 +44,7 @@ public class SettingsTests
             expected.EnableDithering = true;
             expected.StartWithWindows = true;
             expected.CaptureHotkey = "Ctrl+Shift+F12";
+            expected.LanguageCode = LanguageCodes.SimplifiedChinese;
 
             var store = new JsonSettingsStore(path);
             store.Save(expected);
@@ -56,6 +58,7 @@ public class SettingsTests
             Assert.True(actual.EnableDithering);
             Assert.True(actual.StartWithWindows);
             Assert.Equal(expected.CaptureHotkey, actual.CaptureHotkey);
+            Assert.Equal(expected.LanguageCode, actual.LanguageCode);
         }
         finally
         {
@@ -93,7 +96,8 @@ public class SettingsTests
             DurationSeconds = 0,
             ScalePercent = 101,
             MaxColors = 17,
-            CaptureHotkey = " "
+            CaptureHotkey = " ",
+            LanguageCode = " "
         });
 
         Assert.Equal(30, settings.FrameRate);
@@ -102,6 +106,7 @@ public class SettingsTests
         Assert.Equal(256, settings.MaxColors);
         Assert.False(string.IsNullOrWhiteSpace(settings.OutputDirectory));
         Assert.Equal("Ctrl+Shift+G", settings.CaptureHotkey);
+        Assert.Equal(LanguageCodes.System, settings.LanguageCode);
     }
 
     private static string CreateSettingsPath()
