@@ -270,7 +270,12 @@ public partial class App : System.Windows.Application
                 return;
             }
 
-            ShowCapturePreview(frames, settings.FrameRate, settings.OutputDirectory);
+            ShowCapturePreview(
+                frames,
+                settings.FrameRate,
+                settings.OutputDirectory,
+                settings.MaxColors,
+                settings.EnableDithering);
         }
         catch (Exception exception)
         {
@@ -309,7 +314,9 @@ public partial class App : System.Windows.Application
     private void ShowCapturePreview(
         IReadOnlyList<System.Drawing.Bitmap> frames,
         int frameRate,
-        string outputDirectory)
+        string outputDirectory,
+        int maxColors,
+        bool enableDithering)
     {
         if (_localization is null)
         {
@@ -323,6 +330,8 @@ public partial class App : System.Windows.Application
                 frames,
                 frameRate,
                 outputDirectory,
+                maxColors,
+                enableDithering,
                 _localization);
             _capturePreview.Closed += OnCapturePreviewClosed;
             _capturePreview.Show();

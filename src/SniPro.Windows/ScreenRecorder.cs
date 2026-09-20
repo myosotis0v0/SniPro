@@ -8,6 +8,8 @@ namespace SniPro.Windows;
 
 public static class ScreenRecorder
 {
+    public const long MaxBufferedBytes = 512L * 1024 * 1024;
+
     public static Task<IReadOnlyList<Bitmap>> RecordAsync(
         CaptureRegion region,
         int frameRate,
@@ -31,11 +33,22 @@ public static class ScreenRecorder
     {
         var frames = new List<Bitmap>();
         var stopwatch = Stopwatch.StartNew();
+        var (outputWidth, outputHeight) = GetOutputSize(region, scalePercent);
+        var estimatedFrameBytes = checked(
+            (long)outputWidth * outputHeight * sizeof(int));
 
         try
         {
             while (frames.Count == 0 || !stopToken.IsCancellationRequested)
             {
+                var bufferedBytes = checked((frames.Count + 1L) * estimatedFrameBytes);
+                if (bufferedBytes > MaxBufferedBytes)
+                {
+                    throw new InvalidOperationException(
+                        $"The recording buffer limit of {MaxBufferedBytes / (1024 * 1024)} MB was reached. "
+                        + "Reduce the capture area or output scale and try again.");
+                }
+
                 frames.Add(CaptureFrame(region, scalePercent));
 
                 var nextFrameTime = TimeSpan.FromSeconds(frames.Count / (double)frameRate);
@@ -71,33 +84,65 @@ public static class ScreenRecorder
 
     private static Bitmap CaptureFrame(CaptureRegion region, int scalePercent)
     {
-        using var source = new Bitmap(region.Width, region.Height, PixelFormat.Format32bppPArgb);
-        using (var graphics = Graphics.FromImage(source))
+        var source = new Bitmap(region.Width, region.Height, PixelFormat.Format32bppPArgb);
+        var transferSourceOwnership = false;
+        try
         {
-            graphics.CopyFromScreen(
-                region.X,
-                region.Y,
-                0,
-                0,
-                new Size(region.Width, region.Height),
-                CopyPixelOperation.SourceCopy);
-        }
+            using (var graphics = Graphics.FromImage(source))
+            {
+                graphics.CopyFromScreen(
+                    region.X,
+                    region.Y,
+                    0,
+                    0,
+                    new Size(region.Width, region.Height),
+                    CopyPixelOperation.SourceCopy);
+            }
 
-        if (scalePercent == 100)
+            if (scalePercent == 100)
+            {
+                transferSourceOwnership = true;
+                return source;
+            }
+
+            var (scaledWidth, scaledHeight) = GetOutputSize(region, scalePercent);
+            var scaled = new Bitmap(scaledWidth, scaledHeight, PixelFormat.Format32bppPArgb);
+            try
+            {
+                using var scaledGraphics = Graphics.FromImage(scaled);
+                scaledGraphics.CompositingMode = CompositingMode.SourceCopy;
+                scaledGraphics.CompositingQuality = CompositingQuality.HighQuality;
+                scaledGraphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                scaledGraphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                scaledGraphics.DrawImage(source, new Rectangle(0, 0, scaledWidth, scaledHeight));
+                return scaled;
+            }
+            catch
+            {
+                scaled.Dispose();
+                throw;
+            }
+        }
+        finally
         {
-            return new Bitmap(source);
+            if (!transferSourceOwnership)
+            {
+                source.Dispose();
+            }
         }
+    }
 
-        var scaledWidth = Math.Max(1, region.Width * scalePercent / 100);
-        var scaledHeight = Math.Max(1, region.Height * scalePercent / 100);
-        var scaled = new Bitmap(scaledWidth, scaledHeight, PixelFormat.Format32bppPArgb);
-        using var scaledGraphics = Graphics.FromImage(scaled);
-        scaledGraphics.CompositingMode = CompositingMode.SourceCopy;
-        scaledGraphics.CompositingQuality = CompositingQuality.HighQuality;
-        scaledGraphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        scaledGraphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-        scaledGraphics.DrawImage(source, new Rectangle(0, 0, scaledWidth, scaledHeight));
-        return scaled;
+    private static (int Width, int Height) GetOutputSize(
+        CaptureRegion region,
+        int scalePercent)
+    {
+        var width = checked((int)Math.Max(
+            1L,
+            (long)region.Width * scalePercent / 100));
+        var height = checked((int)Math.Max(
+            1L,
+            (long)region.Height * scalePercent / 100));
+        return (width, height);
     }
 
     public static void DisposeFrames(IEnumerable<Bitmap> frames)

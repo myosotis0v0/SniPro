@@ -20,6 +20,8 @@ public partial class CapturePreviewWindow : Window
     private readonly DispatcherTimer _playTimer;
     private readonly int _frameRate;
     private readonly string _outputDirectory;
+    private readonly int _maxColors;
+    private readonly bool _enableDithering;
     private CancellationTokenSource? _saveCancellation;
     private bool _updatingSliders;
     private bool _isSaving;
@@ -31,11 +33,15 @@ public partial class CapturePreviewWindow : Window
         IReadOnlyList<DrawingBitmap> frames,
         int frameRate,
         string outputDirectory,
+        int maxColors,
+        bool enableDithering,
         LocalizationService localization)
     {
         ArgumentNullException.ThrowIfNull(frames);
         ArgumentNullException.ThrowIfNull(localization);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxColors, 2);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxColors, 256);
         if (frames.Count == 0)
         {
             throw new ArgumentException("At least one frame is required.", nameof(frames));
@@ -45,6 +51,8 @@ public partial class CapturePreviewWindow : Window
         _localization = localization;
         _frameRate = Math.Max(1, frameRate);
         _outputDirectory = outputDirectory.Trim();
+        _maxColors = maxColors;
+        _enableDithering = enableDithering;
         _frameImages = frames.Select(CreateBitmapImage).ToArray();
         _startFrame = 0;
         _endFrame = _frameImages.Count - 1;
@@ -160,7 +168,9 @@ public partial class CapturePreviewWindow : Window
                 startFrame,
                 endFrame,
                 filePath,
-                cancellation.Token);
+                cancellationToken: cancellation.Token,
+                maxColors: _maxColors,
+                enableDithering: _enableDithering);
 
             var gifBytes = await File.ReadAllBytesAsync(filePath, cancellation.Token);
             if (TryCopyGifToClipboard(gifBytes))

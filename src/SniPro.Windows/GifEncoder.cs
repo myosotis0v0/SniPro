@@ -17,15 +17,27 @@ public static class GifEncoder
         int startFrame,
         int endFrame,
         string filePath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        int maxColors = 256,
+        bool enableDithering = false)
     {
         ArgumentNullException.ThrowIfNull(frames);
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentOutOfRangeException.ThrowIfLessThan(frameRate, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxColors, 2);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxColors, 256);
         ValidateFrameRange(frames, startFrame, endFrame);
 
         return Task.Run(
-            () => SaveCore(frames, frameRate, startFrame, endFrame, filePath, cancellationToken),
+            () => SaveCore(
+                frames,
+                frameRate,
+                startFrame,
+                endFrame,
+                filePath,
+                maxColors,
+                enableDithering,
+                cancellationToken),
             cancellationToken);
     }
 
@@ -35,6 +47,8 @@ public static class GifEncoder
         int startFrame,
         int endFrame,
         string filePath,
+        int maxColors,
+        bool enableDithering,
         CancellationToken cancellationToken)
     {
         var fullPath = Path.GetFullPath(filePath);
@@ -46,6 +60,12 @@ public static class GifEncoder
 
         Directory.CreateDirectory(directory);
         ValidateFrameDimensions(frames, startFrame, endFrame);
+        var palette = GifPaletteQuantizer.Create(
+            frames,
+            startFrame,
+            endFrame,
+            maxColors,
+            cancellationToken);
 
         var temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
@@ -56,6 +76,8 @@ public static class GifEncoder
                 startFrame,
                 endFrame,
                 temporaryPath,
+                palette,
+                enableDithering,
                 cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             File.Move(temporaryPath, fullPath, true);
@@ -72,13 +94,19 @@ public static class GifEncoder
         int startFrame,
         int endFrame,
         string temporaryPath,
+        GifPalette palette,
+        bool enableDithering,
         CancellationToken cancellationToken)
     {
         var encoder = GetGifEncoder();
         var frameDelay = Math.Max(1, (int)Math.Round(100d / frameRate));
         var frameCount = endFrame - startFrame + 1;
 
-        using var firstFrame = new Bitmap(frames[startFrame]);
+        using var firstFrame = GifPaletteQuantizer.Quantize(
+            frames[startFrame],
+            palette,
+            enableDithering,
+            cancellationToken);
         SetAnimationMetadata(firstFrame, frameCount, frameDelay);
 
         using (var parameters = CreateSaveParameters(EncoderValue.MultiFrame))
@@ -89,7 +117,11 @@ public static class GifEncoder
         for (var index = startFrame + 1; index <= endFrame; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            using var frame = new Bitmap(frames[index]);
+            using var frame = GifPaletteQuantizer.Quantize(
+                frames[index],
+                palette,
+                enableDithering,
+                cancellationToken);
             using var parameters = CreateSaveParameters(EncoderValue.FrameDimensionTime);
             firstFrame.SaveAdd(frame, parameters);
         }
