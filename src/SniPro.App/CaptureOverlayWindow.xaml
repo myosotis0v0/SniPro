@@ -14,15 +14,19 @@
         Focusable="True"
         KeyDown="CaptureOverlayWindow_KeyDown">
     <Grid x:Name="OverlayRoot"
-          Background="#66000000"
-          MouseLeftButtonDown="OverlayCanvas_MouseLeftButtonDown"
-          MouseMove="OverlayCanvas_MouseMove"
-          MouseLeftButtonUp="OverlayCanvas_MouseLeftButtonUp">
+          Background="Transparent"
+          MouseLeftButtonDown="OverlayRoot_MouseLeftButtonDown"
+          MouseMove="OverlayRoot_MouseMove"
+          MouseLeftButtonUp="OverlayRoot_MouseLeftButtonUp">
+        <Path x:Name="DimOverlayPath"
+              Fill="#66000000"
+              IsHitTestVisible="False" />
+
         <Canvas x:Name="OverlayCanvas"
                 IsHitTestVisible="False">
             <Rectangle x:Name="SelectionRectangle"
                        Visibility="Collapsed"
-                       Fill="#33FFFFFF"
+                       Fill="Transparent"
                        Stroke="White"
                        StrokeThickness="2" />
 
@@ -37,6 +41,7 @@
         </Canvas>
 
         <TextBlock x:Name="HintText"
+                   Panel.ZIndex="10"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Top"
                    Margin="32,32,32,0"
@@ -48,5 +53,56 @@
                    TextAlignment="Center"
                    TextWrapping="Wrap"
                    IsHitTestVisible="False" />
+
+        <Button x:Name="StartRecordingButton"
+                Panel.ZIndex="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Margin="0,0,0,32"
+                Padding="18,8"
+                Visibility="Collapsed"
+                Content="{DynamicResource StartRecordingButton}"
+                Click="StartRecordingButton_Click" />
+
+        <Canvas x:Name="HandleCanvas"
+                Panel.ZIndex="15"
+                Background="Transparent">
+            <Rectangle x:Name="TopLeftHandle"
+                       Tag="TopLeft"
+                       Width="10"
+                       Height="10"
+                       Visibility="Collapsed"
+                       Fill="White"
+                       Stroke="Black"
+                       StrokeThickness="1"
+                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+            <Rectangle x:Name="TopRightHandle"
+                       Tag="TopRight"
+                       Width="10"
+                       Height="10"
+                       Visibility="Collapsed"
+                       Fill="White"
+                       Stroke="Black"
+                       StrokeThickness="1"
+                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+            <Rectangle x:Name="BottomLeftHandle"
+                       Tag="BottomLeft"
+                       Width="10"
+                       Height="10"
+                       Visibility="Collapsed"
+                       Fill="White"
+                       Stroke="Black"
+                       StrokeThickness="1"
+                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+            <Rectangle x:Name="BottomRightHandle"
+                       Tag="BottomRight"
+                       Width="10"
+                       Height="10"
+                       Visibility="Collapsed"
+                       Fill="White"
+                       Stroke="Black"
+                       StrokeThickness="1"
+                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+        </Canvas>
     </Grid>
 </Window>

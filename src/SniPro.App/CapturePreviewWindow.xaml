@@ -1,0 +1,100 @@
+<Window x:Class="SniPro.App.CapturePreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource PreviewWindowTitle}"
+        Width="960"
+        Height="720"
+        MinWidth="640"
+        MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        Closed="CapturePreviewWindow_Closed">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Background="#202020"
+                BorderBrush="#555555"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="8">
+            <Image x:Name="PreviewImage"
+                   Stretch="Uniform" />
+        </Border>
+
+        <TextBlock x:Name="FrameStatusText"
+                   Grid.Row="1"
+                   Margin="0,12,0,8"
+                   HorizontalAlignment="Center"
+                   Foreground="Gray" />
+
+        <Grid Grid.Row="2" Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="{DynamicResource PreviewStartFrame}" />
+            <Slider x:Name="StartFrameSlider"
+                    Grid.Column="1"
+                    Minimum="0"
+                    TickFrequency="1"
+                    IsSnapToTickEnabled="True"
+                    ValueChanged="StartFrameSlider_ValueChanged" />
+        </Grid>
+
+        <Grid Grid.Row="3" Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="{DynamicResource PreviewEndFrame}" />
+            <Slider x:Name="EndFrameSlider"
+                    Grid.Column="1"
+                    Minimum="0"
+                    TickFrequency="1"
+                    IsSnapToTickEnabled="True"
+                    ValueChanged="EndFrameSlider_ValueChanged" />
+        </Grid>
+
+        <Grid Grid.Row="4" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="{DynamicResource PreviewCurrentFrame}" />
+            <Slider x:Name="CurrentFrameSlider"
+                    Grid.Column="1"
+                    Minimum="0"
+                    TickFrequency="1"
+                    IsSnapToTickEnabled="True"
+                    ValueChanged="CurrentFrameSlider_ValueChanged" />
+        </Grid>
+
+        <StackPanel Grid.Row="5"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button x:Name="PlayButton"
+                    Margin="8,0,0,0"
+                    Padding="16,6"
+                    Content="{DynamicResource PreviewPause}"
+                    Click="PlayButton_Click" />
+            <Button x:Name="CloseButton"
+                    Margin="8,0,0,0"
+                    Padding="16,6"
+                    Content="{DynamicResource PreviewClose}"
+                    Click="CloseButton_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

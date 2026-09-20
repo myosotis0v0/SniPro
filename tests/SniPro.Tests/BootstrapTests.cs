@@ -7,7 +7,7 @@ public class BootstrapTests
     [Fact]
     public void StageMarker_IsDefined()
     {
-        Assert.Equal("stage-04-capture-overlay", BootstrapInfo.Stage);
+        Assert.Equal("stage-05-record-preview", BootstrapInfo.Stage);
     }
 
     [Fact]

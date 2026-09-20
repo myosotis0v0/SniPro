@@ -16,11 +16,15 @@ public partial class App : System.Windows.Application
     private StartupManager? _startupManager;
     private GlobalHotkeyHost? _hotkeyHost;
     private CaptureOverlayWindow? _captureOverlay;
+    private CapturePreviewWindow? _capturePreview;
+    private CancellationTokenSource? _recordingCancellation;
     private LocalizationService? _localization;
     private WinForms.ToolStripMenuItem? _openTrayItem;
     private WinForms.ToolStripMenuItem? _exitTrayItem;
     private AppSettings _settings = AppSettingsDefaults.Create();
     private bool _isExiting;
+    private bool _isRecording;
+    private bool _restoreMainWindowAfterCapture;
 
     private void OnStartup(object sender, StartupEventArgs e)
     {
@@ -207,7 +211,10 @@ public partial class App : System.Windows.Application
 
     private void BeginCapture()
     {
-        if (_captureOverlay is not null || _localization is null)
+        if (_captureOverlay is not null ||
+            _capturePreview is not null ||
+            _isRecording ||
+            _localization is null)
         {
             return;
         }
@@ -215,7 +222,7 @@ public partial class App : System.Windows.Application
         try
         {
             _captureOverlay = new CaptureOverlayWindow(_localization);
-            _captureOverlay.RegionConfirmed += OnCaptureRegionConfirmed;
+            _captureOverlay.RecordingRequested += OnCaptureRecordingRequested;
             _captureOverlay.Cancelled += OnCaptureCancelled;
             _captureOverlay.Closed += OnCaptureOverlayClosed;
             _captureOverlay.Show();
@@ -229,18 +236,82 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private void OnCaptureRegionConfirmed(object? sender, CaptureRegionEventArgs e)
+    private async void OnCaptureRecordingRequested(object? sender, CaptureRegionEventArgs e)
     {
-        if (_mainWindow?.IsVisible == true)
+        if (_isRecording || _localization is null)
         {
-            _mainWindow.ShowCaptureRegionSelected(e.Region);
+            return;
         }
-        else
+
+        _isRecording = true;
+        _restoreMainWindowAfterCapture = _mainWindow?.IsVisible == true;
+        if (sender is CaptureOverlayWindow overlay)
+        {
+            overlay.Close();
+        }
+
+        _mainWindow?.Hide();
+        using var cancellation = new CancellationTokenSource();
+        _recordingCancellation = cancellation;
+        var settings = _settings.Clone();
+
+        try
+        {
+            await Task.Delay(120, cancellation.Token);
+            var frames = await ScreenRecorder.RecordAsync(
+                e.Region,
+                settings.FrameRate,
+                settings.DurationSeconds,
+                settings.ScalePercent,
+                cancellation.Token);
+
+            ShowCapturePreview(frames, settings.FrameRate);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            if (!_isExiting)
+            {
+                RestoreMainWindowAfterCapture();
+            }
+        }
+        catch (Exception exception)
         {
             ShowTrayNotification(
-                _localization?.Get("TrayCaptureRegionSelected") ?? "Capture region selected",
-                _localization?.Format("TrayCaptureRegionSize", e.Region.Width, e.Region.Height)
-                    ?? $"{e.Region.Width} × {e.Region.Height}");
+                _localization.Get("TrayRecordingFailed"),
+                _localization.Format("StatusRecordingFailed", exception.Message));
+            RestoreMainWindowAfterCapture();
+        }
+        finally
+        {
+            if (ReferenceEquals(_recordingCancellation, cancellation))
+            {
+                _recordingCancellation = null;
+            }
+
+            _isRecording = false;
+        }
+    }
+
+    private void ShowCapturePreview(
+        IReadOnlyList<System.Drawing.Bitmap> frames,
+        int frameRate)
+    {
+        if (_localization is null)
+        {
+            ScreenRecorder.DisposeFrames(frames);
+            return;
+        }
+
+        try
+        {
+            _capturePreview = new CapturePreviewWindow(frames, frameRate, _localization);
+            _capturePreview.Closed += OnCapturePreviewClosed;
+            _capturePreview.Show();
+        }
+        catch
+        {
+            ScreenRecorder.DisposeFrames(frames);
+            throw;
         }
     }
 
@@ -262,12 +333,33 @@ public partial class App : System.Windows.Application
     {
         if (sender is CaptureOverlayWindow overlay)
         {
-            overlay.RegionConfirmed -= OnCaptureRegionConfirmed;
+            overlay.RecordingRequested -= OnCaptureRecordingRequested;
             overlay.Cancelled -= OnCaptureCancelled;
             overlay.Closed -= OnCaptureOverlayClosed;
         }
 
         _captureOverlay = null;
+    }
+
+    private void OnCapturePreviewClosed(object? sender, EventArgs e)
+    {
+        if (sender is CapturePreviewWindow preview)
+        {
+            preview.Closed -= OnCapturePreviewClosed;
+        }
+
+        _capturePreview = null;
+        RestoreMainWindowAfterCapture();
+    }
+
+    private void RestoreMainWindowAfterCapture()
+    {
+        if (_restoreMainWindowAfterCapture && !_isExiting)
+        {
+            ShowMainWindow();
+        }
+
+        _restoreMainWindowAfterCapture = false;
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
@@ -312,6 +404,8 @@ public partial class App : System.Windows.Application
 
     private void OnExit(object sender, ExitEventArgs e)
     {
+        _recordingCancellation?.Cancel();
+        _capturePreview?.Close();
         _captureOverlay?.Close();
         _captureOverlay = null;
 
