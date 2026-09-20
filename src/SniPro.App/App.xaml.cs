@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Windows;
 using SniPro.Core;
+using SniPro.Windows;
 using WinForms = System.Windows.Forms;
 
 namespace SniPro.App;
@@ -11,6 +12,8 @@ public partial class App : System.Windows.Application
     private Mutex? _singleInstanceMutex;
     private MainWindow? _mainWindow;
     private WinForms.NotifyIcon? _notifyIcon;
+    private JsonSettingsStore? _settingsStore;
+    private AppSettings _settings = AppSettingsDefaults.Create();
     private bool _isExiting;
 
     private void OnStartup(object sender, StartupEventArgs e)
@@ -24,7 +27,9 @@ public partial class App : System.Windows.Application
         }
 
         _singleInstanceMutex = mutex;
-        _mainWindow = new MainWindow();
+        _settingsStore = new JsonSettingsStore(SettingsFilePath.GetDefault());
+        _settings = _settingsStore.Load();
+        _mainWindow = new MainWindow(_settings, SaveSettings);
         _mainWindow.Closing += OnMainWindowClosing;
 
         CreateTrayIcon();
@@ -65,6 +70,8 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        _mainWindow.LoadSettings(_settings);
+
         if (!_mainWindow.IsVisible)
         {
             _mainWindow.Show();
@@ -76,6 +83,18 @@ public partial class App : System.Windows.Application
         }
 
         _mainWindow.Activate();
+    }
+
+    private void SaveSettings(AppSettings settings)
+    {
+        if (_settingsStore is null)
+        {
+            throw new InvalidOperationException("Settings store is not initialized.");
+        }
+
+        var normalized = AppSettingsValidator.Normalize(settings);
+        _settingsStore.Save(normalized);
+        _settings = normalized;
     }
 
     private void OnMainWindowClosing(object? sender, CancelEventArgs e)
