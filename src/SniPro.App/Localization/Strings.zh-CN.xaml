@@ -55,6 +55,14 @@
     <sys:String x:Key="PreviewFrameStatus">第 {0}/{1} 帧 · 选中范围 {2}-{3}</sys:String>
     <sys:String x:Key="PreviewPlay">播放</sys:String>
     <sys:String x:Key="PreviewPause">暂停</sys:String>
+    <sys:String x:Key="PreviewSave">保存 GIF</sys:String>
+    <sys:String x:Key="PreviewSaveDialogTitle">保存 GIF</sys:String>
+    <sys:String x:Key="PreviewSaving">正在保存 GIF……</sys:String>
+    <sys:String x:Key="PreviewSaved">GIF 已保存，并已复制到剪切板：{0}</sys:String>
+    <sys:String x:Key="PreviewSavedClipboardFailed">GIF 已保存，但无法复制到剪切板：{0}</sys:String>
+    <sys:String x:Key="PreviewSaveCancelled">已取消保存 GIF。</sys:String>
+    <sys:String x:Key="PreviewSaveCancelling">正在取消保存 GIF……</sys:String>
+    <sys:String x:Key="PreviewSaveFailed">GIF 保存失败：{0}</sys:String>
     <sys:String x:Key="PreviewClose">关闭预览</sys:String>
     <sys:String x:Key="TrayCaptureRegionSelected">已选择截屏区域</sys:String>
     <sys:String x:Key="TrayCaptureRegionCancelled">截屏已取消</sys:String>

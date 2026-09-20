@@ -55,6 +55,14 @@
     <sys:String x:Key="PreviewFrameStatus">Frame {0}/{1} · selected range {2}-{3}</sys:String>
     <sys:String x:Key="PreviewPlay">Play</sys:String>
     <sys:String x:Key="PreviewPause">Pause</sys:String>
+    <sys:String x:Key="PreviewSave">Save GIF</sys:String>
+    <sys:String x:Key="PreviewSaveDialogTitle">Save GIF</sys:String>
+    <sys:String x:Key="PreviewSaving">Saving GIF...</sys:String>
+    <sys:String x:Key="PreviewSaved">GIF saved and copied to the clipboard: {0}</sys:String>
+    <sys:String x:Key="PreviewSavedClipboardFailed">GIF saved, but it could not be copied to the clipboard: {0}</sys:String>
+    <sys:String x:Key="PreviewSaveCancelled">GIF save cancelled.</sys:String>
+    <sys:String x:Key="PreviewSaveCancelling">Cancelling GIF save...</sys:String>
+    <sys:String x:Key="PreviewSaveFailed">Could not save GIF: {0}</sys:String>
     <sys:String x:Key="PreviewClose">Close preview</sys:String>
     <sys:String x:Key="TrayCaptureRegionSelected">Capture region selected</sys:String>
     <sys:String x:Key="TrayCaptureRegionCancelled">Capture cancelled</sys:String>

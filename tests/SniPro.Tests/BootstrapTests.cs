@@ -7,7 +7,7 @@ public class BootstrapTests
     [Fact]
     public void StageMarker_IsDefined()
     {
-        Assert.Equal("stage-06-recording-control", BootstrapInfo.Stage);
+        Assert.Equal("stage-07-gif-save", BootstrapInfo.Stage);
     }
 
     [Fact]

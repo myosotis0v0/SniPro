@@ -270,7 +270,7 @@ public partial class App : System.Windows.Application
                 return;
             }
 
-            ShowCapturePreview(frames, settings.FrameRate);
+            ShowCapturePreview(frames, settings.FrameRate, settings.OutputDirectory);
         }
         catch (Exception exception)
         {
@@ -308,7 +308,8 @@ public partial class App : System.Windows.Application
 
     private void ShowCapturePreview(
         IReadOnlyList<System.Drawing.Bitmap> frames,
-        int frameRate)
+        int frameRate,
+        string outputDirectory)
     {
         if (_localization is null)
         {
@@ -318,7 +319,11 @@ public partial class App : System.Windows.Application
 
         try
         {
-            _capturePreview = new CapturePreviewWindow(frames, frameRate, _localization);
+            _capturePreview = new CapturePreviewWindow(
+                frames,
+                frameRate,
+                outputDirectory,
+                _localization);
             _capturePreview.Closed += OnCapturePreviewClosed;
             _capturePreview.Show();
         }

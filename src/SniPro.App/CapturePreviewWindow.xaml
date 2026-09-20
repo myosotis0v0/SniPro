@@ -7,10 +7,12 @@
         MinWidth="640"
         MinHeight="480"
         WindowStartupLocation="CenterScreen"
+        Closing="CapturePreviewWindow_Closing"
         Closed="CapturePreviewWindow_Closed">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -82,9 +84,20 @@
                     ValueChanged="CurrentFrameSlider_ValueChanged" />
         </Grid>
 
-        <StackPanel Grid.Row="5"
+        <TextBlock x:Name="SaveStatusText"
+                   Grid.Row="5"
+                   Margin="0,0,0,12"
+                   Foreground="Gray"
+                   TextWrapping="Wrap" />
+
+        <StackPanel Grid.Row="6"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
+            <Button x:Name="SaveGifButton"
+                    Margin="8,0,0,0"
+                    Padding="16,6"
+                    Content="{DynamicResource PreviewSave}"
+                    Click="SaveGifButton_Click" />
             <Button x:Name="PlayButton"
                     Margin="8,0,0,0"
                     Padding="16,6"
