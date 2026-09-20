@@ -1,5 +1,6 @@
 using System.Windows;
 using SniPro.Core;
+using SniPro.Windows;
 using WinForms = System.Windows.Forms;
 using WpfBrush = System.Windows.Media.Brush;
 using WpfBrushes = System.Windows.Media.Brushes;
@@ -29,6 +30,8 @@ public partial class MainWindow : Window
         ScalePercentTextBox.Text = _loadedSettings.ScalePercent.ToString();
         MaxColorsComboBox.SelectedItem = _loadedSettings.MaxColors;
         EnableDitheringCheckBox.IsChecked = _loadedSettings.EnableDithering;
+        StartWithWindowsCheckBox.IsChecked = _loadedSettings.StartWithWindows;
+        CaptureHotkeyTextBox.Text = _loadedSettings.CaptureHotkey;
         SetStatus("Settings loaded.", WpfBrushes.Gray);
     }
 
@@ -76,6 +79,11 @@ public partial class MainWindow : Window
         Hide();
     }
 
+    public void ShowCaptureHotkeyReceived()
+    {
+        SetStatus("Capture hotkey received. The capture overlay will be added in the next stage.", WpfBrushes.DarkBlue);
+    }
+
     private bool TryBuildSettings(out AppSettings settings)
     {
         settings = _loadedSettings.Clone();
@@ -105,11 +113,19 @@ public partial class MainWindow : Window
             return false;
         }
 
+        if (!GlobalHotkeyParser.TryParse(CaptureHotkeyTextBox.Text, out var hotkey, out var hotkeyError))
+        {
+            SetStatus(hotkeyError, WpfBrushes.DarkRed);
+            return false;
+        }
+
         settings.FrameRate = frameRate;
         settings.DurationSeconds = duration;
         settings.ScalePercent = scale;
         settings.MaxColors = maxColors;
         settings.EnableDithering = EnableDitheringCheckBox.IsChecked == true;
+        settings.StartWithWindows = StartWithWindowsCheckBox.IsChecked == true;
+        settings.CaptureHotkey = hotkey.CanonicalText;
         settings = AppSettingsValidator.Normalize(settings);
         return true;
     }

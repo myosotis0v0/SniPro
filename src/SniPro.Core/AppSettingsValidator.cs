@@ -21,6 +21,9 @@ public static class AppSettingsValidator
         normalized.MaxColors = normalized.MaxColors is 32 or 64 or 128 or 256
             ? normalized.MaxColors
             : defaults.MaxColors;
+        normalized.CaptureHotkey = string.IsNullOrWhiteSpace(normalized.CaptureHotkey)
+            ? defaults.CaptureHotkey
+            : normalized.CaptureHotkey.Trim();
 
         return normalized;
     }

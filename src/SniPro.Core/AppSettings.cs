@@ -18,6 +18,10 @@ public sealed class AppSettings
 
     public bool EnableDithering { get; set; }
 
+    public bool StartWithWindows { get; set; }
+
+    public string CaptureHotkey { get; set; } = "Ctrl+Shift+G";
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -28,7 +32,9 @@ public sealed class AppSettings
             DurationSeconds = DurationSeconds,
             ScalePercent = ScalePercent,
             MaxColors = MaxColors,
-            EnableDithering = EnableDithering
+            EnableDithering = EnableDithering,
+            StartWithWindows = StartWithWindows,
+            CaptureHotkey = CaptureHotkey
         };
     }
 }

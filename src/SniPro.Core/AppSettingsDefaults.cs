@@ -18,7 +18,9 @@ public static class AppSettingsDefaults
             DurationSeconds = 5,
             ScalePercent = 100,
             MaxColors = 256,
-            EnableDithering = false
+            EnableDithering = false,
+            StartWithWindows = false,
+            CaptureHotkey = "Ctrl+Shift+G"
         };
     }
 }

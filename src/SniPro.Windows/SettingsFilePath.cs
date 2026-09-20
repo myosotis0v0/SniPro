@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace SniPro.Windows;
 
 public static class SettingsFilePath

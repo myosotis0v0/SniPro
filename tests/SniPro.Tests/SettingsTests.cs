@@ -18,6 +18,8 @@ public class SettingsTests
             Assert.Equal(100, settings.ScalePercent);
             Assert.Equal(256, settings.MaxColors);
             Assert.False(settings.EnableDithering);
+            Assert.False(settings.StartWithWindows);
+            Assert.Equal("Ctrl+Shift+G", settings.CaptureHotkey);
         }
         finally
         {
@@ -39,6 +41,8 @@ public class SettingsTests
             expected.ScalePercent = 75;
             expected.MaxColors = 128;
             expected.EnableDithering = true;
+            expected.StartWithWindows = true;
+            expected.CaptureHotkey = "Ctrl+Shift+F12";
 
             var store = new JsonSettingsStore(path);
             store.Save(expected);
@@ -50,6 +54,8 @@ public class SettingsTests
             Assert.Equal(expected.ScalePercent, actual.ScalePercent);
             Assert.Equal(expected.MaxColors, actual.MaxColors);
             Assert.True(actual.EnableDithering);
+            Assert.True(actual.StartWithWindows);
+            Assert.Equal(expected.CaptureHotkey, actual.CaptureHotkey);
         }
         finally
         {
@@ -86,7 +92,8 @@ public class SettingsTests
             FrameRate = 99,
             DurationSeconds = 0,
             ScalePercent = 101,
-            MaxColors = 17
+            MaxColors = 17,
+            CaptureHotkey = " "
         });
 
         Assert.Equal(30, settings.FrameRate);
@@ -94,6 +101,7 @@ public class SettingsTests
         Assert.Equal(100, settings.ScalePercent);
         Assert.Equal(256, settings.MaxColors);
         Assert.False(string.IsNullOrWhiteSpace(settings.OutputDirectory));
+        Assert.Equal("Ctrl+Shift+G", settings.CaptureHotkey);
     }
 
     private static string CreateSettingsPath()

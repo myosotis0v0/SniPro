@@ -7,6 +7,6 @@ public class BootstrapTests
     [Fact]
     public void StageMarker_IsDefined()
     {
-        Assert.Equal("stage-02-settings", BootstrapInfo.Stage);
+        Assert.Equal("stage-03-autostart-hotkey", BootstrapInfo.Stage);
     }
 }
