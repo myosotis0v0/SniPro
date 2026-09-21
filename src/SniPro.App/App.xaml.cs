@@ -241,7 +241,6 @@ public partial class App : System.Windows.Application
             _captureOverlay = new CaptureOverlayWindow(_localization);
             _captureOverlay.RecordingRequested += OnCaptureRecordingRequested;
             _captureOverlay.StopRecordingRequested += OnCaptureStopRecordingRequested;
-            _captureOverlay.Cancelled += OnCaptureCancelled;
             _captureOverlay.Closed += OnCaptureOverlayClosed;
             _captureOverlay.Show();
         }
@@ -365,27 +364,12 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private void OnCaptureCancelled(object? sender, EventArgs e)
-    {
-        if (_mainWindow?.IsVisible == true)
-        {
-            _mainWindow.ShowCaptureCancelled();
-        }
-        else
-        {
-            ShowTrayNotification(
-                _localization?.Get("TrayCaptureRegionCancelled") ?? "Capture cancelled",
-                _localization?.Get("TrayCaptureRegionCancelledMessage") ?? "No capture was recorded.");
-        }
-    }
-
     private void OnCaptureOverlayClosed(object? sender, EventArgs e)
     {
         if (sender is CaptureOverlayWindow overlay)
         {
             overlay.RecordingRequested -= OnCaptureRecordingRequested;
             overlay.StopRecordingRequested -= OnCaptureStopRecordingRequested;
-            overlay.Cancelled -= OnCaptureCancelled;
             overlay.Closed -= OnCaptureOverlayClosed;
         }
 

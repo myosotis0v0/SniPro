@@ -23,8 +23,6 @@
     <sys:String x:Key="StatusSettingsSaved">设置已保存。</sys:String>
     <sys:String x:Key="StatusDefaultsLoaded">默认值已加载。点击“保存”后才会写入。</sys:String>
     <sys:String x:Key="StatusCaptureHotkeyReceived">已收到截屏快捷键，请拖动选择区域。</sys:String>
-    <sys:String x:Key="StatusCaptureRegionSelected">已选择截屏区域：{0} × {1}</sys:String>
-    <sys:String x:Key="StatusCaptureRegionCancelled">已取消截屏。</sys:String>
     <sys:String x:Key="ErrorFrameRate">帧率必须在 1 到 30 之间。</sys:String>
     <sys:String x:Key="ErrorScale">输出缩放必须在 25% 到 100% 之间。</sys:String>
     <sys:String x:Key="ErrorMaxColors">请选择最大颜色数。</sys:String>
@@ -57,7 +55,6 @@
     <sys:String x:Key="PreviewPlay">播放</sys:String>
     <sys:String x:Key="PreviewPause">暂停</sys:String>
     <sys:String x:Key="PreviewSave">保存 GIF</sys:String>
-    <sys:String x:Key="PreviewSaveDialogTitle">保存 GIF</sys:String>
     <sys:String x:Key="PreviewSaving">正在保存 GIF……</sys:String>
     <sys:String x:Key="PreviewSaved">GIF 已保存，文件已复制到剪切板：{0}</sys:String>
     <sys:String x:Key="PreviewSavedClipboardFailed">GIF 已保存，但文件无法复制到剪切板：{0}</sys:String>
@@ -65,8 +62,4 @@
     <sys:String x:Key="PreviewSaveCancelling">正在取消保存 GIF……</sys:String>
     <sys:String x:Key="PreviewSaveFailed">GIF 保存失败：{0}</sys:String>
     <sys:String x:Key="PreviewClose">关闭预览</sys:String>
-    <sys:String x:Key="TrayCaptureRegionSelected">已选择截屏区域</sys:String>
-    <sys:String x:Key="TrayCaptureRegionCancelled">截屏已取消</sys:String>
-    <sys:String x:Key="TrayCaptureRegionCancelledMessage">未生成截屏。</sys:String>
-    <sys:String x:Key="TrayCaptureRegionSize">{0} × {1}</sys:String>
 </ResourceDictionary>

@@ -144,12 +144,6 @@ public partial class CapturePreviewWindow : Window
             return;
         }
 
-        var filePath = ChooseGifPath();
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            return;
-        }
-
         var startFrame = _startFrame;
         var endFrame = _endFrame;
         using var cancellation = new CancellationTokenSource();
@@ -163,6 +157,7 @@ public partial class CapturePreviewWindow : Window
 
         try
         {
+            var filePath = CreateGifPath();
             await GifEncoder.SaveAsync(
                 _frames,
                 _frameRate,
@@ -212,28 +207,22 @@ public partial class CapturePreviewWindow : Window
         }
     }
 
-    private string? ChooseGifPath()
+    private string CreateGifPath()
     {
-        using var dialog = new WinForms.SaveFileDialog
-        {
-            AddExtension = true,
-            CheckPathExists = true,
-            DefaultExt = "gif",
-            FileName = $"SniPro_{DateTime.Now:yyyyMMdd_HHmmss}.gif",
-            Filter = "GIF image (*.gif)|*.gif",
-            OverwritePrompt = true,
-            RestoreDirectory = true,
-            Title = _localization.Get("PreviewSaveDialogTitle")
-        };
+        var outputDirectory = Path.GetFullPath(_outputDirectory);
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var filePath = Path.Combine(outputDirectory, $"SniPro_{timestamp}.gif");
+        var suffix = 2;
 
-        if (Directory.Exists(_outputDirectory))
+        while (File.Exists(filePath))
         {
-            dialog.InitialDirectory = _outputDirectory;
+            filePath = Path.Combine(
+                outputDirectory,
+                $"SniPro_{timestamp}_{suffix}.gif");
+            suffix++;
         }
 
-        return dialog.ShowDialog() == WinForms.DialogResult.OK
-            ? dialog.FileName
-            : null;
+        return filePath;
     }
 
     private static bool TryCopyGifToClipboard(string filePath)

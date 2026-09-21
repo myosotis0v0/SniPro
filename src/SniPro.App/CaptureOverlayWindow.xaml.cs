@@ -64,8 +64,6 @@ public partial class CaptureOverlayWindow : Window
 
     public event EventHandler? StopRecordingRequested;
 
-    public event EventHandler? Cancelled;
-
     private void CaptureOverlayWindow_SourceInitialized(object? sender, EventArgs e)
     {
         var handle = new WindowInteropHelper(this).Handle;
@@ -396,7 +394,6 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
-        Cancelled?.Invoke(this, EventArgs.Empty);
         Close();
     }
 

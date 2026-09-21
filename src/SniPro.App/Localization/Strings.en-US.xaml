@@ -23,8 +23,6 @@
     <sys:String x:Key="StatusSettingsSaved">Settings saved.</sys:String>
     <sys:String x:Key="StatusDefaultsLoaded">Defaults loaded. Click Save to persist them.</sys:String>
     <sys:String x:Key="StatusCaptureHotkeyReceived">Capture hotkey received. Drag to select a region.</sys:String>
-    <sys:String x:Key="StatusCaptureRegionSelected">Capture region selected: {0} × {1}</sys:String>
-    <sys:String x:Key="StatusCaptureRegionCancelled">Capture cancelled.</sys:String>
     <sys:String x:Key="ErrorFrameRate">Frame rate must be between 1 and 30.</sys:String>
     <sys:String x:Key="ErrorScale">Output scale must be between 25 and 100 percent.</sys:String>
     <sys:String x:Key="ErrorMaxColors">Select a maximum color count.</sys:String>
@@ -57,7 +55,6 @@
     <sys:String x:Key="PreviewPlay">Play</sys:String>
     <sys:String x:Key="PreviewPause">Pause</sys:String>
     <sys:String x:Key="PreviewSave">Save GIF</sys:String>
-    <sys:String x:Key="PreviewSaveDialogTitle">Save GIF</sys:String>
     <sys:String x:Key="PreviewSaving">Saving GIF...</sys:String>
     <sys:String x:Key="PreviewSaved">GIF saved. Its file was copied to the clipboard: {0}</sys:String>
     <sys:String x:Key="PreviewSavedClipboardFailed">GIF saved, but its file could not be copied to the clipboard: {0}</sys:String>
@@ -65,8 +62,4 @@
     <sys:String x:Key="PreviewSaveCancelling">Cancelling GIF save...</sys:String>
     <sys:String x:Key="PreviewSaveFailed">Could not save GIF: {0}</sys:String>
     <sys:String x:Key="PreviewClose">Close preview</sys:String>
-    <sys:String x:Key="TrayCaptureRegionSelected">Capture region selected</sys:String>
-    <sys:String x:Key="TrayCaptureRegionCancelled">Capture cancelled</sys:String>
-    <sys:String x:Key="TrayCaptureRegionCancelledMessage">No capture was recorded.</sys:String>
-    <sys:String x:Key="TrayCaptureRegionSize">{0} × {1}</sys:String>
 </ResourceDictionary>

@@ -94,18 +94,6 @@ public partial class MainWindow : Window
         SetStatus(_localization.Get("StatusCaptureHotkeyReceived"), WpfBrushes.DarkBlue);
     }
 
-    public void ShowCaptureRegionSelected(CaptureRegion region)
-    {
-        SetStatus(
-            _localization.Format("StatusCaptureRegionSelected", region.Width, region.Height),
-            WpfBrushes.DarkBlue);
-    }
-
-    public void ShowCaptureCancelled()
-    {
-        SetStatus(_localization.Get("StatusCaptureRegionCancelled"), WpfBrushes.DarkBlue);
-    }
-
     private bool TryBuildSettings(out AppSettings settings)
     {
         settings = _loadedSettings.Clone();
