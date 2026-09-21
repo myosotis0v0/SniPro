@@ -101,10 +101,12 @@ public static class GifEncoder
         var encoder = GetGifEncoder();
         var frameDelay = Math.Max(1, (int)Math.Round(100d / frameRate));
         var frameCount = endFrame - startFrame + 1;
+        var mapper = GifPaletteQuantizer.CreateMapper(palette);
 
         using var firstFrame = GifPaletteQuantizer.Quantize(
             frames[startFrame],
             palette,
+            mapper,
             enableDithering,
             cancellationToken);
         SetAnimationMetadata(firstFrame, frameCount, frameDelay);
@@ -120,6 +122,7 @@ public static class GifEncoder
             using var frame = GifPaletteQuantizer.Quantize(
                 frames[index],
                 palette,
+                mapper,
                 enableDithering,
                 cancellationToken);
             using var parameters = CreateSaveParameters(EncoderValue.FrameDimensionTime);

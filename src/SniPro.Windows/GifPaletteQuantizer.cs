@@ -7,8 +7,6 @@ namespace SniPro.Windows;
 internal static class GifPaletteQuantizer
 {
     private const int MaxHistogramSamples = 250_000;
-    private const int PaletteLookupBits = 5;
-    private const int PaletteLookupSize = 1 << (PaletteLookupBits * 3);
 
     public static GifPalette Create(
         IReadOnlyList<Bitmap> frames,
@@ -77,29 +75,33 @@ internal static class GifPaletteQuantizer
     public static Bitmap Quantize(
         Bitmap frame,
         GifPalette palette,
+        GifPaletteMapper mapper,
         bool enableDithering,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(frame);
         ArgumentNullException.ThrowIfNull(palette);
+        ArgumentNullException.ThrowIfNull(mapper);
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var source = CreateArgbBitmap(frame);
-        var indexed = new Bitmap(
-            source.Width,
-            source.Height,
-            PixelFormat.Format8bppIndexed);
-        ApplyPalette(indexed, palette);
-
+        var source = PrepareSourceBitmap(frame, out var disposeSource);
+        Bitmap? indexed = null;
         BitmapData? sourceData = null;
         BitmapData? destinationData = null;
+        var transferIndexedOwnership = false;
         try
         {
+            indexed = new Bitmap(
+                source.Width,
+                source.Height,
+                PixelFormat.Format8bppIndexed);
+            ApplyPalette(indexed, palette);
+
             var rectangle = new Rectangle(0, 0, source.Width, source.Height);
             sourceData = source.LockBits(
                 rectangle,
                 ImageLockMode.ReadOnly,
-                PixelFormat.Format32bppArgb);
+                source.PixelFormat);
             destinationData = indexed.LockBits(
                 rectangle,
                 ImageLockMode.WriteOnly,
@@ -107,7 +109,6 @@ internal static class GifPaletteQuantizer
 
             var sourceRow = new byte[checked(source.Width * sizeof(int))];
             var destinationRow = new byte[Math.Abs(destinationData.Stride)];
-            var mapper = new PaletteMapper(palette.Colors);
             var currentRedErrors = enableDithering ? new int[source.Width + 2] : null;
             var currentGreenErrors = enableDithering ? new int[source.Width + 2] : null;
             var currentBlueErrors = enableDithering ? new int[source.Width + 2] : null;
@@ -184,15 +185,13 @@ internal static class GifPaletteQuantizer
                     Array.Clear(nextBlueErrors!);
                 }
             }
-        }
-        catch
-        {
-            indexed.Dispose();
-            throw;
+
+            transferIndexedOwnership = true;
+            return indexed;
         }
         finally
         {
-            if (destinationData is not null)
+            if (destinationData is not null && indexed is not null)
             {
                 indexed.UnlockBits(destinationData);
             }
@@ -201,9 +200,23 @@ internal static class GifPaletteQuantizer
             {
                 source.UnlockBits(sourceData);
             }
-        }
 
-        return indexed;
+            if (!transferIndexedOwnership)
+            {
+                indexed?.Dispose();
+            }
+
+            if (disposeSource)
+            {
+                source.Dispose();
+            }
+        }
+    }
+
+    public static GifPaletteMapper CreateMapper(GifPalette palette)
+    {
+        ArgumentNullException.ThrowIfNull(palette);
+        return new GifPaletteMapper(palette.Colors);
     }
 
     private static Dictionary<int, long> BuildHistogram(
@@ -231,46 +244,56 @@ internal static class GifPaletteQuantizer
         for (var index = startFrame; index <= endFrame && samplesTaken < MaxHistogramSamples; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            using var source = CreateArgbBitmap(frames[index]);
-            var rectangle = new Rectangle(0, 0, source.Width, source.Height);
-            var data = source.LockBits(
-                rectangle,
-                ImageLockMode.ReadOnly,
-                PixelFormat.Format32bppArgb);
+            var source = PrepareSourceBitmap(frames[index], out var disposeSource);
             try
             {
-                var row = new byte[checked(source.Width * sizeof(int))];
-                var framePixels = (long)source.Width * source.Height;
-                var position = sampleStep > 1 ? sampleStep / 2 : 0;
-                var lastRow = -1;
-
-                while (position < framePixels && samplesTaken < MaxHistogramSamples)
+                var rectangle = new Rectangle(0, 0, source.Width, source.Height);
+                var data = source.LockBits(
+                    rectangle,
+                    ImageLockMode.ReadOnly,
+                    source.PixelFormat);
+                try
                 {
-                    var y = (int)(position / source.Width);
-                    var x = (int)(position % source.Width);
-                    if (y != lastRow)
-                    {
-                        Marshal.Copy(
-                            GetRowPointer(data, y),
-                            row,
-                            0,
-                            row.Length);
-                        lastRow = y;
-                    }
+                    var row = new byte[checked(source.Width * sizeof(int))];
+                    var framePixels = (long)source.Width * source.Height;
+                    var position = sampleStep > 1 ? sampleStep / 2 : 0;
+                    var lastRow = -1;
 
-                    var offset = x * sizeof(int);
-                    var packedRgb = (row[offset + 2] << 16)
-                        | (row[offset + 1] << 8)
-                        | row[offset];
-                    histogram.TryGetValue(packedRgb, out var count);
-                    histogram[packedRgb] = checked(count + sampleWeight);
-                    samplesTaken++;
-                    position += sampleStep;
+                    while (position < framePixels && samplesTaken < MaxHistogramSamples)
+                    {
+                        var y = (int)(position / source.Width);
+                        var x = (int)(position % source.Width);
+                        if (y != lastRow)
+                        {
+                            Marshal.Copy(
+                                GetRowPointer(data, y),
+                                row,
+                                0,
+                                row.Length);
+                            lastRow = y;
+                        }
+
+                        var offset = x * sizeof(int);
+                        var packedRgb = (row[offset + 2] << 16)
+                            | (row[offset + 1] << 8)
+                            | row[offset];
+                        histogram.TryGetValue(packedRgb, out var count);
+                        histogram[packedRgb] = checked(count + sampleWeight);
+                        samplesTaken++;
+                        position += sampleStep;
+                    }
+                }
+                finally
+                {
+                    source.UnlockBits(data);
                 }
             }
             finally
             {
-                source.UnlockBits(data);
+                if (disposeSource)
+                {
+                    source.Dispose();
+                }
             }
         }
 
@@ -321,6 +344,19 @@ internal static class GifPaletteQuantizer
             normalized.Dispose();
             throw;
         }
+    }
+
+    private static Bitmap PrepareSourceBitmap(Bitmap source, out bool disposeSource)
+    {
+        if (source.PixelFormat == PixelFormat.Format32bppArgb ||
+            source.PixelFormat == PixelFormat.Format32bppPArgb)
+        {
+            disposeSource = false;
+            return source;
+        }
+
+        disposeSource = true;
+        return CreateArgbBitmap(source);
     }
 
     private static void ApplyPalette(Bitmap indexed, GifPalette palette)
@@ -467,71 +503,6 @@ internal static class GifPaletteQuantizer
         }
     }
 
-    private sealed class PaletteMapper
-    {
-        private readonly GifRgb[] _colors;
-        private readonly byte[] _lookup = new byte[PaletteLookupSize];
-
-        public PaletteMapper(GifRgb[] colors)
-        {
-            _colors = colors;
-            for (var red = 0; red < 1 << PaletteLookupBits; red++)
-            {
-                for (var green = 0; green < 1 << PaletteLookupBits; green++)
-                {
-                    for (var blue = 0; blue < 1 << PaletteLookupBits; blue++)
-                    {
-                        var key = (red << (PaletteLookupBits * 2))
-                            | (green << PaletteLookupBits)
-                            | blue;
-                        _lookup[key] = FindNearest(
-                            ExpandLookupChannel(red),
-                            ExpandLookupChannel(green),
-                            ExpandLookupChannel(blue));
-                    }
-                }
-            }
-        }
-
-        public byte FindNearest(int red, int green, int blue)
-        {
-            var redKey = (red * 31 + 127) / 255;
-            var greenKey = (green * 31 + 127) / 255;
-            var blueKey = (blue * 31 + 127) / 255;
-            var key = (redKey << (PaletteLookupBits * 2))
-                | (greenKey << PaletteLookupBits)
-                | blueKey;
-            return _lookup[key];
-        }
-
-        private byte FindNearest(byte red, byte green, byte blue)
-        {
-            var bestIndex = 0;
-            var bestDistance = int.MaxValue;
-            for (var index = 0; index < _colors.Length; index++)
-            {
-                var color = _colors[index];
-                var redDistance = red - color.R;
-                var greenDistance = green - color.G;
-                var blueDistance = blue - color.B;
-                var distance = redDistance * redDistance
-                    + greenDistance * greenDistance
-                    + blueDistance * blueDistance;
-                if (distance < bestDistance)
-                {
-                    bestDistance = distance;
-                    bestIndex = index;
-                }
-            }
-
-            return (byte)bestIndex;
-        }
-
-        private static byte ExpandLookupChannel(int value)
-        {
-            return (byte)((value * 255 + 15) / 31);
-        }
-    }
 }
 
 internal sealed class GifPalette
