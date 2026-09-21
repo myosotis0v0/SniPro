@@ -12,6 +12,7 @@ public partial class App : System.Windows.Application
     private Mutex? _singleInstanceMutex;
     private MainWindow? _mainWindow;
     private WinForms.NotifyIcon? _notifyIcon;
+    private System.Drawing.Icon? _trayIcon;
     private JsonSettingsStore? _settingsStore;
     private StartupManager? _startupManager;
     private GlobalHotkeyHost? _hotkeyHost;
@@ -79,14 +80,30 @@ public partial class App : System.Windows.Application
         contextMenu.Items.Add(new WinForms.ToolStripSeparator());
         contextMenu.Items.Add(_exitTrayItem);
 
+        _trayIcon = TryLoadApplicationIcon();
         _notifyIcon = new WinForms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = _trayIcon ?? System.Drawing.SystemIcons.Application,
             Text = SniProIdentity.Name,
             ContextMenuStrip = contextMenu,
             Visible = true
         };
         _notifyIcon.DoubleClick += (_, _) => ShowMainWindow();
+    }
+
+    private static System.Drawing.Icon? TryLoadApplicationIcon()
+    {
+        try
+        {
+            var processPath = Environment.ProcessPath;
+            return string.IsNullOrWhiteSpace(processPath)
+                ? null
+                : System.Drawing.Icon.ExtractAssociatedIcon(processPath);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private void ShowMainWindow()
@@ -462,6 +479,9 @@ public partial class App : System.Windows.Application
             _notifyIcon.Dispose();
             _notifyIcon = null;
         }
+
+        _trayIcon?.Dispose();
+        _trayIcon = null;
 
         if (_singleInstanceMutex is not null)
         {
