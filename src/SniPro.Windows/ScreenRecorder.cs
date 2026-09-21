@@ -44,9 +44,7 @@ public static class ScreenRecorder
                 var bufferedBytes = checked((frames.Count + 1L) * estimatedFrameBytes);
                 if (bufferedBytes > MaxBufferedBytes)
                 {
-                    throw new InvalidOperationException(
-                        $"The recording buffer limit of {MaxBufferedBytes / (1024 * 1024)} MB was reached. "
-                        + "Reduce the capture area or output scale and try again.");
+                    throw new RecordingBufferLimitException(MaxBufferedBytes);
                 }
 
                 frames.Add(CaptureFrame(region, scalePercent));

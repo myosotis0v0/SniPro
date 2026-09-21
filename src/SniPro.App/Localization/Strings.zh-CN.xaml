@@ -22,7 +22,7 @@
     <sys:String x:Key="StatusSettingsLoaded">设置已加载。</sys:String>
     <sys:String x:Key="StatusSettingsSaved">设置已保存。</sys:String>
     <sys:String x:Key="StatusDefaultsLoaded">默认值已加载。点击“保存”后才会写入。</sys:String>
-    <sys:String x:Key="StatusCaptureHotkeyReceived">已收到截屏快捷键。截屏覆盖层将在下一阶段加入。</sys:String>
+    <sys:String x:Key="StatusCaptureHotkeyReceived">已收到截屏快捷键，请拖动选择区域。</sys:String>
     <sys:String x:Key="StatusCaptureRegionSelected">已选择截屏区域：{0} × {1}</sys:String>
     <sys:String x:Key="StatusCaptureRegionCancelled">已取消截屏。</sys:String>
     <sys:String x:Key="ErrorFrameRate">帧率必须在 1 到 30 之间。</sys:String>
@@ -40,7 +40,7 @@
     <sys:String x:Key="TrayStartupUnavailable">开机启动设置不可用</sys:String>
     <sys:String x:Key="TrayGlobalHotkeyUnavailable">全局快捷键不可用</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyTitle">已收到截屏快捷键</sys:String>
-    <sys:String x:Key="TrayCaptureHotkeyMessage">截屏覆盖层将在下一阶段加入。</sys:String>
+    <sys:String x:Key="TrayCaptureHotkeyMessage">请拖动选择截屏区域。</sys:String>
     <sys:String x:Key="CaptureOverlayTitle">选择截屏区域</sys:String>
     <sys:String x:Key="CaptureOverlayHint">拖动选择区域，调整四角后点击“开始录制”。按 Esc 取消。</sys:String>
     <sys:String x:Key="CaptureOverlayRecordingHint">正在录制。点击“结束录制”或按 Enter 完成。</sys:String>
@@ -48,6 +48,7 @@
     <sys:String x:Key="StopRecordingButton">结束录制</sys:String>
     <sys:String x:Key="TrayRecordingFailed">录制失败</sys:String>
     <sys:String x:Key="StatusRecordingFailed">无法录制所选区域：{0}</sys:String>
+    <sys:String x:Key="StatusRecordingBufferLimit">录制已达到 {0} MB 帧缓存上限。请缩小截屏区域或降低输出缩放后重试。</sys:String>
     <sys:String x:Key="PreviewWindowTitle">SniPro 预览</sys:String>
     <sys:String x:Key="PreviewStartFrame">开始帧</sys:String>
     <sys:String x:Key="PreviewEndFrame">结束帧</sys:String>
@@ -58,8 +59,8 @@
     <sys:String x:Key="PreviewSave">保存 GIF</sys:String>
     <sys:String x:Key="PreviewSaveDialogTitle">保存 GIF</sys:String>
     <sys:String x:Key="PreviewSaving">正在保存 GIF……</sys:String>
-    <sys:String x:Key="PreviewSaved">GIF 已保存，并已复制到剪切板：{0}</sys:String>
-    <sys:String x:Key="PreviewSavedClipboardFailed">GIF 已保存，但无法复制到剪切板：{0}</sys:String>
+    <sys:String x:Key="PreviewSaved">GIF 已保存，文件已复制到剪切板：{0}</sys:String>
+    <sys:String x:Key="PreviewSavedClipboardFailed">GIF 已保存，但文件无法复制到剪切板：{0}</sys:String>
     <sys:String x:Key="PreviewSaveCancelled">已取消保存 GIF。</sys:String>
     <sys:String x:Key="PreviewSaveCancelling">正在取消保存 GIF……</sys:String>
     <sys:String x:Key="PreviewSaveFailed">GIF 保存失败：{0}</sys:String>

@@ -22,6 +22,7 @@ public partial class MainWindow : Window
         _localization = localization;
 
         InitializeComponent();
+        VersionText.Text = $"v{SniProIdentity.Version}";
         MaxColorsComboBox.ItemsSource = new[] { 32, 64, 128, 256 };
         LoadSettings(initialSettings);
     }

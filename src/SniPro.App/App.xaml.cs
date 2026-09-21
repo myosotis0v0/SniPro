@@ -286,9 +286,14 @@ public partial class App : System.Windows.Application
 
             if (!_isExiting && _localization is not null)
             {
+                var message = exception is RecordingBufferLimitException bufferLimit
+                    ? _localization.Format(
+                        "StatusRecordingBufferLimit",
+                        bufferLimit.LimitMegabytes)
+                    : _localization.Format("StatusRecordingFailed", exception.Message);
                 ShowTrayNotification(
                     _localization.Get("TrayRecordingFailed"),
-                    _localization.Format("StatusRecordingFailed", exception.Message));
+                    message);
                 RestoreMainWindowAfterCapture();
             }
         }

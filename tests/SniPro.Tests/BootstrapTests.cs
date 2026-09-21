@@ -7,7 +7,7 @@ public class BootstrapTests
     [Fact]
     public void StageMarker_IsDefined()
     {
-        Assert.Equal("stage-08-quality-performance", BootstrapInfo.Stage);
+        Assert.Equal("stage-09-release", BootstrapInfo.Stage);
     }
 
     [Fact]

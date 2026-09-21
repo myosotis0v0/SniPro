@@ -18,10 +18,15 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   FontSize="26"
-                   FontWeight="SemiBold"
-                   Text="{DynamicResource AppSettingsTitle}" />
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <TextBlock FontSize="26"
+                       FontWeight="SemiBold"
+                       Text="{DynamicResource AppSettingsTitle}" />
+            <TextBlock x:Name="VersionText"
+                       Margin="12,10,0,0"
+                       VerticalAlignment="Center"
+                       Foreground="Gray" />
+        </StackPanel>
 
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>

@@ -22,7 +22,7 @@
     <sys:String x:Key="StatusSettingsLoaded">Settings loaded.</sys:String>
     <sys:String x:Key="StatusSettingsSaved">Settings saved.</sys:String>
     <sys:String x:Key="StatusDefaultsLoaded">Defaults loaded. Click Save to persist them.</sys:String>
-    <sys:String x:Key="StatusCaptureHotkeyReceived">Capture hotkey received. The capture overlay will be added in the next stage.</sys:String>
+    <sys:String x:Key="StatusCaptureHotkeyReceived">Capture hotkey received. Drag to select a region.</sys:String>
     <sys:String x:Key="StatusCaptureRegionSelected">Capture region selected: {0} × {1}</sys:String>
     <sys:String x:Key="StatusCaptureRegionCancelled">Capture cancelled.</sys:String>
     <sys:String x:Key="ErrorFrameRate">Frame rate must be between 1 and 30.</sys:String>
@@ -40,7 +40,7 @@
     <sys:String x:Key="TrayStartupUnavailable">Startup setting unavailable</sys:String>
     <sys:String x:Key="TrayGlobalHotkeyUnavailable">Global hotkey unavailable</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyTitle">Capture hotkey received</sys:String>
-    <sys:String x:Key="TrayCaptureHotkeyMessage">The capture overlay will be added in the next stage.</sys:String>
+    <sys:String x:Key="TrayCaptureHotkeyMessage">Drag to select a capture region.</sys:String>
     <sys:String x:Key="CaptureOverlayTitle">Select capture region</sys:String>
     <sys:String x:Key="CaptureOverlayHint">Drag to select a region, adjust the corners, then click Start recording. Press Esc to cancel.</sys:String>
     <sys:String x:Key="CaptureOverlayRecordingHint">Recording. Click Stop recording or press Enter to finish.</sys:String>
@@ -48,6 +48,7 @@
     <sys:String x:Key="StopRecordingButton">Stop recording</sys:String>
     <sys:String x:Key="TrayRecordingFailed">Recording failed</sys:String>
     <sys:String x:Key="StatusRecordingFailed">Could not record the selected region: {0}</sys:String>
+    <sys:String x:Key="StatusRecordingBufferLimit">Recording stopped at the {0} MB frame-buffer limit. Reduce the capture area or output scale and try again.</sys:String>
     <sys:String x:Key="PreviewWindowTitle">SniPro Preview</sys:String>
     <sys:String x:Key="PreviewStartFrame">Start frame</sys:String>
     <sys:String x:Key="PreviewEndFrame">End frame</sys:String>
@@ -58,8 +59,8 @@
     <sys:String x:Key="PreviewSave">Save GIF</sys:String>
     <sys:String x:Key="PreviewSaveDialogTitle">Save GIF</sys:String>
     <sys:String x:Key="PreviewSaving">Saving GIF...</sys:String>
-    <sys:String x:Key="PreviewSaved">GIF saved and copied to the clipboard: {0}</sys:String>
-    <sys:String x:Key="PreviewSavedClipboardFailed">GIF saved, but it could not be copied to the clipboard: {0}</sys:String>
+    <sys:String x:Key="PreviewSaved">GIF saved. Its file was copied to the clipboard: {0}</sys:String>
+    <sys:String x:Key="PreviewSavedClipboardFailed">GIF saved, but its file could not be copied to the clipboard: {0}</sys:String>
     <sys:String x:Key="PreviewSaveCancelled">GIF save cancelled.</sys:String>
     <sys:String x:Key="PreviewSaveCancelling">Cancelling GIF save...</sys:String>
     <sys:String x:Key="PreviewSaveFailed">Could not save GIF: {0}</sys:String>
