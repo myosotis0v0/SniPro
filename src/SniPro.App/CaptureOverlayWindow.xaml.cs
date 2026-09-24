@@ -178,8 +178,10 @@ public partial class CaptureOverlayWindow : Window
             UpdateDraggedSelection(point);
         }
 
+        var shouldForwardClick = CaptureRegionEditor.ShouldForwardClick(
+            _isRecording, _dragBaseRegion.HasValue, _dragHit, wasDrag);
         ResetDrag();
-        if (!wasDrag)
+        if (shouldForwardClick)
         {
             ForwardClickToUnderlyingApplication(point);
         }

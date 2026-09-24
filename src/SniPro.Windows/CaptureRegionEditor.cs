@@ -18,6 +18,11 @@ public enum CaptureRegionHit
 
 public static class CaptureRegionEditor
 {
+    public static bool ShouldForwardClick(bool isRecording, bool hasSelection, CaptureRegionHit hit, bool wasDrag)
+    {
+        return !wasDrag && (isRecording || !hasSelection || hit == CaptureRegionHit.Outside);
+    }
+
     public static CaptureRegionHit HitTest(CaptureRegion region, int x, int y, int tolerance)
     {
         if (!region.IsValid)
