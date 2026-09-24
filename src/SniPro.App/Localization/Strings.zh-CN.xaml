@@ -67,6 +67,10 @@
     <sys:String x:Key="PreviewPause">暂停</sys:String>
     <sys:String x:Key="PreviewSave">保存 GIF</sys:String>
     <sys:String x:Key="PreviewSaving">正在保存 GIF……</sys:String>
+    <sys:String x:Key="PreviewAnalyzingColors">正在分析画面颜色……</sys:String>
+    <sys:String x:Key="PreviewPreparingPalette">正在准备 GIF 调色板……</sys:String>
+    <sys:String x:Key="PreviewEncodingFrames">正在写入第 {0}/{1} 帧……</sys:String>
+    <sys:String x:Key="PreviewFinalizing">正在完成 GIF 文件……</sys:String>
     <sys:String x:Key="PreviewSaved">GIF 已保存，文件已复制到剪切板：{0}</sys:String>
     <sys:String x:Key="PreviewSavedClipboardFailed">GIF 已保存，但文件无法复制到剪切板：{0}</sys:String>
     <sys:String x:Key="PreviewSaveCancelled">已取消保存 GIF。</sys:String>

@@ -19,7 +19,8 @@ public static class GifEncoder
         string filePath,
         CancellationToken cancellationToken = default,
         int maxColors = 256,
-        bool enableDithering = false)
+        bool enableDithering = false,
+        IProgress<GifEncodingProgress>? progress = null)
     {
         ArgumentNullException.ThrowIfNull(frames);
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
@@ -37,7 +38,8 @@ public static class GifEncoder
                 filePath,
                 maxColors,
                 enableDithering,
-                cancellationToken),
+                cancellationToken,
+                progress),
             cancellationToken);
     }
 
@@ -49,7 +51,8 @@ public static class GifEncoder
         string filePath,
         int maxColors,
         bool enableDithering,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IProgress<GifEncodingProgress>? progress)
     {
         var fullPath = Path.GetFullPath(filePath);
         var directory = Path.GetDirectoryName(fullPath);
@@ -60,12 +63,14 @@ public static class GifEncoder
 
         Directory.CreateDirectory(directory);
         ValidateFrameDimensions(frames, startFrame, endFrame);
+        progress?.Report(new GifEncodingProgress(GifEncodingStage.AnalyzingColors));
         var palette = GifPaletteQuantizer.Create(
             frames,
             startFrame,
             endFrame,
             maxColors,
             cancellationToken);
+        progress?.Report(new GifEncodingProgress(GifEncodingStage.PreparingPalette));
 
         var temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
@@ -78,7 +83,8 @@ public static class GifEncoder
                 temporaryPath,
                 palette,
                 enableDithering,
-                cancellationToken);
+                cancellationToken,
+                progress);
             cancellationToken.ThrowIfCancellationRequested();
             File.Move(temporaryPath, fullPath, true);
         }
@@ -96,12 +102,14 @@ public static class GifEncoder
         string temporaryPath,
         GifPalette palette,
         bool enableDithering,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IProgress<GifEncodingProgress>? progress)
     {
         var encoder = GetGifEncoder();
         var frameDelay = Math.Max(1, (int)Math.Round(100d / frameRate));
         var frameCount = endFrame - startFrame + 1;
         var mapper = GifPaletteQuantizer.CreateMapper(palette);
+        progress?.Report(new GifEncodingProgress(GifEncodingStage.EncodingFrames, 0, frameCount));
 
         using var firstFrame = GifPaletteQuantizer.Quantize(
             frames[startFrame],
@@ -115,7 +123,9 @@ public static class GifEncoder
         {
             firstFrame.Save(temporaryPath, encoder, parameters);
         }
+        progress?.Report(new GifEncodingProgress(GifEncodingStage.EncodingFrames, 1, frameCount));
 
+        var reportInterval = (frameCount - 1) / 100 + 1;
         for (var index = startFrame + 1; index <= endFrame; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -127,9 +137,18 @@ public static class GifEncoder
                 cancellationToken);
             using var parameters = CreateSaveParameters(EncoderValue.FrameDimensionTime);
             firstFrame.SaveAdd(frame, parameters);
+            var completedFrames = index - startFrame + 1;
+            if (completedFrames == frameCount || completedFrames % reportInterval == 0)
+            {
+                progress?.Report(new GifEncodingProgress(
+                    GifEncodingStage.EncodingFrames,
+                    completedFrames,
+                    frameCount));
+            }
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+        progress?.Report(new GifEncodingProgress(GifEncodingStage.Finalizing));
         using var flushParameters = CreateSaveParameters(EncoderValue.Flush);
         firstFrame.SaveAdd(flushParameters);
     }

@@ -67,6 +67,10 @@
     <sys:String x:Key="PreviewPause">Pause</sys:String>
     <sys:String x:Key="PreviewSave">Save GIF</sys:String>
     <sys:String x:Key="PreviewSaving">Saving GIF...</sys:String>
+    <sys:String x:Key="PreviewAnalyzingColors">Analyzing colors...</sys:String>
+    <sys:String x:Key="PreviewPreparingPalette">Preparing the GIF palette...</sys:String>
+    <sys:String x:Key="PreviewEncodingFrames">Writing frame {0}/{1}...</sys:String>
+    <sys:String x:Key="PreviewFinalizing">Finishing the GIF file...</sys:String>
     <sys:String x:Key="PreviewSaved">GIF saved. Its file was copied to the clipboard: {0}</sys:String>
     <sys:String x:Key="PreviewSavedClipboardFailed">GIF saved, but its file could not be copied to the clipboard: {0}</sys:String>
     <sys:String x:Key="PreviewSaveCancelled">GIF save cancelled.</sys:String>

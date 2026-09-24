@@ -153,6 +153,8 @@ public partial class CapturePreviewWindow : Window
         PlayButton.IsEnabled = false;
         CloseButton.IsEnabled = false;
         SaveProgressBar.Visibility = Visibility.Visible;
+        SaveProgressBar.IsIndeterminate = true;
+        SaveProgressBar.Value = 0;
         SaveStatusText.Foreground = ThemeBrush("AccentBrush");
         SaveStatusText.Text = _localization.Get("PreviewSaving");
         UiMotion.FadeIn(SaveStatusText);
@@ -160,6 +162,13 @@ public partial class CapturePreviewWindow : Window
         try
         {
             var filePath = CreateGifPath();
+            var progress = new Progress<GifEncodingProgress>(update =>
+            {
+                if (_isSaving && ReferenceEquals(_saveCancellation, cancellation))
+                {
+                    UpdateSaveProgress(update);
+                }
+            });
             await GifEncoder.SaveAsync(
                 _frames,
                 _frameRate,
@@ -168,7 +177,8 @@ public partial class CapturePreviewWindow : Window
                 filePath,
                 cancellationToken: cancellation.Token,
                 maxColors: _maxColors,
-                enableDithering: _enableDithering);
+                enableDithering: _enableDithering,
+                progress: progress);
 
             if (TryCopyGifToClipboard(filePath))
             {
@@ -208,6 +218,28 @@ public partial class CapturePreviewWindow : Window
             PlayButton.IsEnabled = true;
             CloseButton.IsEnabled = true;
             UiMotion.FadeIn(SaveStatusText);
+        }
+    }
+
+    private void UpdateSaveProgress(GifEncodingProgress update)
+    {
+        SaveStatusText.Text = update.Stage switch
+        {
+            GifEncodingStage.AnalyzingColors => _localization.Get("PreviewAnalyzingColors"),
+            GifEncodingStage.PreparingPalette => _localization.Get("PreviewPreparingPalette"),
+            GifEncodingStage.EncodingFrames => _localization.Format(
+                "PreviewEncodingFrames",
+                update.CompletedFrames,
+                update.TotalFrames),
+            GifEncodingStage.Finalizing => _localization.Get("PreviewFinalizing"),
+            _ => _localization.Get("PreviewSaving")
+        };
+
+        SaveProgressBar.IsIndeterminate = update.Stage != GifEncodingStage.EncodingFrames;
+        if (update.Stage == GifEncodingStage.EncodingFrames)
+        {
+            SaveProgressBar.Maximum = Math.Max(1, update.TotalFrames);
+            SaveProgressBar.Value = update.CompletedFrames;
         }
     }
 

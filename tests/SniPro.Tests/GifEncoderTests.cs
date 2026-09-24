@@ -15,6 +15,7 @@ public class GifEncoderTests
             Guid.NewGuid().ToString("N"));
         var path = Path.Combine(directory, "capture.gif");
         Directory.CreateDirectory(directory);
+        var updates = new List<GifEncodingProgress>();
 
         using var first = new Bitmap(8, 8);
         using var second = new Bitmap(8, 8);
@@ -35,11 +36,18 @@ public class GifEncoderTests
                 frameRate: 10,
                 startFrame: 0,
                 endFrame: 1,
-                path);
+                path,
+                progress: new ImmediateProgress<GifEncodingProgress>(updates.Add));
 
             Assert.True(File.Exists(path));
             using var image = Image.FromFile(path);
             Assert.Equal(2, image.GetFrameCount(FrameDimension.Time));
+            Assert.Equal(GifEncodingStage.AnalyzingColors, updates[0].Stage);
+            Assert.Contains(updates, update =>
+                update.Stage == GifEncodingStage.EncodingFrames &&
+                update.CompletedFrames == 2 &&
+                update.TotalFrames == 2);
+            Assert.Equal(GifEncodingStage.Finalizing, updates[^1].Stage);
         }
         finally
         {
@@ -100,5 +108,10 @@ public class GifEncoderTests
                 Directory.Delete(directory, recursive: true);
             }
         }
+    }
+
+    private sealed class ImmediateProgress<T>(Action<T> callback) : IProgress<T>
+    {
+        public void Report(T value) => callback(value);
     }
 }
