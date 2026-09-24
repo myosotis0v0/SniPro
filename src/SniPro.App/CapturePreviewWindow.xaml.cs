@@ -28,9 +28,21 @@ public partial class CapturePreviewWindow : Window
     private CancellationTokenSource? _saveCancellation;
     private bool _updatingSliders;
     private bool _isSaving;
+    private TimelineDragTarget _timelineDragTarget;
+    private double _timelineDragStartX;
+    private double _timelineDragOffsetX;
+    private bool _timelineMoved;
     private int _startFrame;
     private int _endFrame;
     private int _currentFrame;
+
+    private enum TimelineDragTarget
+    {
+        None,
+        Playhead,
+        Start,
+        End
+    }
 
     public CapturePreviewWindow(
         IReadOnlyList<DrawingBitmap> frames,
@@ -129,13 +141,143 @@ public partial class CapturePreviewWindow : Window
             return;
         }
 
-        var position = Math.Clamp(e.GetPosition(TimelineStrip).X / width, 0, 0.999999);
-        var frame = Math.Min(_frameImages.Count - 1, (int)(position * _frameImages.Count));
+        var position = e.GetPosition(TimelineStrip);
+        var startX = TimelineBoundaryX(_startFrame);
+        var endX = TimelineBoundaryX(_endFrame + 1);
+        var playheadX = TimelinePlayheadX();
+        const double hitRadius = 12;
+        var startDistance = Math.Abs(position.X - startX);
+        var endDistance = Math.Abs(position.X - endX);
+        var nearPlayhead = Math.Abs(position.X - playheadX) <= hitRadius;
+
+        if (position.Y <= 16 && nearPlayhead)
+        {
+            _timelineDragTarget = TimelineDragTarget.Playhead;
+        }
+        else if (startDistance <= hitRadius || endDistance <= hitRadius)
+        {
+            _timelineDragTarget = startDistance <= endDistance
+                ? TimelineDragTarget.Start
+                : TimelineDragTarget.End;
+        }
+        else
+        {
+            _timelineDragTarget = TimelineDragTarget.Playhead;
+        }
+
+        _timelineDragStartX = position.X;
+        _timelineMoved = false;
+        _timelineDragOffsetX = _timelineDragTarget switch
+        {
+            TimelineDragTarget.Start => position.X - startX,
+            TimelineDragTarget.End => position.X - endX,
+            _ when nearPlayhead => position.X - playheadX,
+            _ => 0
+        };
         _playTimer.Stop();
         PlayButton.Content = _localization.Get("PreviewPlay");
-        ApplySliderState(_startFrame, _endFrame, Math.Clamp(frame, _startFrame, _endFrame));
+        if (_timelineDragTarget == TimelineDragTarget.Playhead && !nearPlayhead)
+        {
+            UpdateTimelineFromPointer(position.X);
+        }
+
+        if (!TimelineStrip.CaptureMouse())
+        {
+            EndTimelineDrag();
+        }
         e.Handled = true;
     }
+
+    private void TimelineStrip_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_timelineDragTarget == TimelineDragTarget.None || !TimelineStrip.IsMouseCaptured)
+        {
+            return;
+        }
+
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            EndTimelineDrag();
+            return;
+        }
+
+        var x = e.GetPosition(TimelineStrip).X;
+        if (!_timelineMoved && Math.Abs(x - _timelineDragStartX) < 2)
+        {
+            return;
+        }
+
+        _timelineMoved = true;
+        UpdateTimelineFromPointer(x);
+        e.Handled = true;
+    }
+
+    private void TimelineStrip_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_timelineDragTarget == TimelineDragTarget.None)
+        {
+            return;
+        }
+
+        if (_timelineMoved)
+        {
+            UpdateTimelineFromPointer(e.GetPosition(TimelineStrip).X);
+        }
+
+        EndTimelineDrag();
+        e.Handled = true;
+    }
+
+    private void TimelineStrip_LostMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        _timelineDragTarget = TimelineDragTarget.None;
+        _timelineMoved = false;
+    }
+
+    private void EndTimelineDrag()
+    {
+        _timelineDragTarget = TimelineDragTarget.None;
+        _timelineMoved = false;
+        if (TimelineStrip.IsMouseCaptured)
+        {
+            TimelineStrip.ReleaseMouseCapture();
+        }
+    }
+
+    private void UpdateTimelineFromPointer(double pointerX)
+    {
+        var width = TimelineStrip.ActualWidth;
+        if (_isSaving || width <= 0)
+        {
+            return;
+        }
+
+        var x = Math.Clamp(pointerX - _timelineDragOffsetX, 0, width);
+        var boundary = (int)Math.Round(
+            x * _frameImages.Count / width,
+            MidpointRounding.AwayFromZero);
+        switch (_timelineDragTarget)
+        {
+            case TimelineDragTarget.Start:
+                var startFrame = Math.Clamp(boundary, 0, _endFrame);
+                ApplySliderState(startFrame, _endFrame, Math.Max(_currentFrame, startFrame));
+                break;
+            case TimelineDragTarget.End:
+                var endFrame = Math.Clamp(boundary - 1, _startFrame, _frameImages.Count - 1);
+                ApplySliderState(_startFrame, endFrame, Math.Min(_currentFrame, endFrame));
+                break;
+            case TimelineDragTarget.Playhead:
+                var frame = Math.Min(_frameImages.Count - 1, (int)(x * _frameImages.Count / width));
+                ApplySliderState(_startFrame, _endFrame, Math.Clamp(frame, _startFrame, _endFrame));
+                break;
+        }
+    }
+
+    private double TimelineBoundaryX(int boundary) =>
+        TimelineStrip.ActualWidth * boundary / _frameImages.Count;
+
+    private double TimelinePlayheadX() =>
+        TimelineStrip.ActualWidth * (_currentFrame + 0.5) / _frameImages.Count;
 
     private void TimelineOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
     {
@@ -178,6 +320,7 @@ public partial class CapturePreviewWindow : Window
         using var cancellation = new CancellationTokenSource();
         _saveCancellation = cancellation;
         _isSaving = true;
+        EndTimelineDrag();
         _playTimer.Stop();
         PlayButton.Content = _localization.Get("PreviewPlay");
         TimelinePanel.IsEnabled = false;
@@ -377,9 +520,14 @@ public partial class CapturePreviewWindow : Window
         Canvas.SetLeft(TimelineRightShade, selectedRight);
         TimelineRange.Width = Math.Max(2, selectedRight - selectedLeft);
         Canvas.SetLeft(TimelineRange, selectedLeft);
+        Canvas.SetLeft(TimelineStartHandle, Math.Clamp(selectedLeft - 4.5, 0, Math.Max(0, width - 9)));
+        Canvas.SetLeft(TimelineEndHandle, Math.Clamp(selectedRight - 4.5, 0, Math.Max(0, width - 9)));
         Canvas.SetLeft(
             TimelinePlayhead,
             Math.Clamp(width * (_currentFrame + 0.5) / frameCount - 1.5, 0, Math.Max(0, width - 3)));
+        Canvas.SetLeft(
+            TimelinePlayheadMarker,
+            Math.Clamp(width * (_currentFrame + 0.5) / frameCount - 6, 0, Math.Max(0, width - 12)));
     }
 
     private static BitmapImage CreateBitmapImage(DrawingBitmap frame)
@@ -422,6 +570,7 @@ public partial class CapturePreviewWindow : Window
     private void CapturePreviewWindow_Closed(object? sender, EventArgs e)
     {
         _saveCancellation?.Cancel();
+        EndTimelineDrag();
         _playTimer.Stop();
         _playTimer.Tick -= PlayTimer_Tick;
         ScreenRecorder.DisposeFrames(_frames);

@@ -45,7 +45,7 @@
             <Grid>
                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,8" Text="{DynamicResource PreviewTrimTitle}" />
-                <Border x:Name="TimelineStrip" Grid.Row="1" Height="48" Margin="0,0,0,9" Background="#211C2B" CornerRadius="8" ClipToBounds="True" Cursor="Hand" ToolTip="{DynamicResource PreviewTimelineHint}" AutomationProperties.Name="{DynamicResource PreviewTimelineHint}" MouseLeftButtonDown="TimelineStrip_MouseLeftButtonDown">
+                <Border x:Name="TimelineStrip" Grid.Row="1" Height="48" Margin="0,0,0,9" Background="#211C2B" CornerRadius="8" ClipToBounds="True" Cursor="SizeWE" ToolTip="{DynamicResource PreviewTimelineHint}" AutomationProperties.Name="{DynamicResource PreviewTimelineHint}" MouseLeftButtonDown="TimelineStrip_MouseLeftButtonDown" MouseMove="TimelineStrip_MouseMove" MouseLeftButtonUp="TimelineStrip_MouseLeftButtonUp" LostMouseCapture="TimelineStrip_LostMouseCapture">
                     <Grid>
                         <ItemsControl x:Name="TimelineThumbnails" IsHitTestVisible="False">
                             <ItemsControl.ItemsPanel>
@@ -63,7 +63,10 @@
                             <Border x:Name="TimelineLeftShade" Height="48" Background="#880E0A18" />
                             <Border x:Name="TimelineRightShade" Height="48" Background="#880E0A18" />
                             <Border x:Name="TimelineRange" Height="48" BorderBrush="#D4BFFF" BorderThickness="2" CornerRadius="7" />
+                            <Border x:Name="TimelineStartHandle" Width="9" Height="28" Background="#D4BFFF" CornerRadius="3" Canvas.Top="10" />
+                            <Border x:Name="TimelineEndHandle" Width="9" Height="28" Background="#D4BFFF" CornerRadius="3" Canvas.Top="10" />
                             <Border x:Name="TimelinePlayhead" Height="48" Width="3" Background="#FF8267" />
+                            <Path x:Name="TimelinePlayheadMarker" Width="12" Height="8" Data="M 0 0 L 12 0 L 6 8 Z" Fill="#FF8267" />
                         </Canvas>
                     </Grid>
                 </Border>
