@@ -48,50 +48,50 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20" Margin="0,0,0,12">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="{DynamicResource CaptureSectionTitle}" />
-                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,5,0,16" Text="{DynamicResource CaptureSectionDescription}" TextWrapping="Wrap" />
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource FrameRateLabel}" />
-                                <TextBox x:Name="FrameRateTextBox" Style="{StaticResource SoftTextBoxStyle}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource ScaleLabel}" />
-                                <TextBox x:Name="ScalePercentTextBox" Style="{StaticResource SoftTextBoxStyle}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="4">
+                <Grid Margin="0,0,0,2">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitleStyle}" Text="{DynamicResource CaptureSectionTitle}" />
+                            <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,5,0,14" Text="{DynamicResource CaptureSectionDescription}" TextWrapping="Wrap" />
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource FrameRateLabel}" />
+                                    <TextBox x:Name="FrameRateTextBox" Style="{StaticResource SoftTextBoxStyle}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource ScaleLabel}" />
+                                    <TextBox x:Name="ScalePercentTextBox" Style="{StaticResource SoftTextBoxStyle}" />
+                                </StackPanel>
+                            </Grid>
+                            <StackPanel Margin="0,12,0,0">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource MaxColorsLabel}" />
                                 <ComboBox x:Name="MaxColorsComboBox" Style="{StaticResource SoftComboBoxStyle}" ItemContainerStyle="{StaticResource SoftComboBoxItemStyle}" />
                             </StackPanel>
-                        </Grid>
-                        <Border Margin="0,18,0,0" Padding="13,11" Background="{StaticResource CanvasBrush}" CornerRadius="10">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <TextBlock FontSize="13" FontWeight="SemiBold" Text="{DynamicResource EnableDithering}" />
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,3,0,0" Text="{DynamicResource DitheringDescription}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <CheckBox x:Name="EnableDitheringCheckBox" Grid.Column="1" Style="{StaticResource SoftCheckBoxStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource EnableDithering}" />
-                            </Grid>
-                        </Border>
-                    </StackPanel>
-                </Border>
+                            <Border Margin="0,14,0,0" Padding="11,10" Background="{StaticResource CanvasBrush}" CornerRadius="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock FontSize="13" FontWeight="SemiBold" Text="{DynamicResource EnableDithering}" />
+                                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,3,0,0" Text="{DynamicResource DitheringDescription}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <CheckBox x:Name="EnableDitheringCheckBox" Grid.Column="1" Style="{StaticResource SoftCheckBoxStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource EnableDithering}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
 
-                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20" Margin="0,0,0,2">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="{DynamicResource BehaviorSectionTitle}" />
-                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,5,0,16" Text="{DynamicResource BehaviorSectionDescription}" TextWrapping="Wrap" />
-                        <CheckBox x:Name="StartWithWindowsCheckBox" Style="{StaticResource SoftCheckBoxStyle}" Content="{DynamicResource StartWithWindows}" Margin="0,0,0,17" />
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
+                    <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitleStyle}" Text="{DynamicResource BehaviorSectionTitle}" />
+                            <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,5,0,14" Text="{DynamicResource BehaviorSectionDescription}" TextWrapping="Wrap" />
+                            <CheckBox x:Name="StartWithWindowsCheckBox" Style="{StaticResource SoftCheckBoxStyle}" Content="{DynamicResource StartWithWindows}" Margin="0,0,0,16" />
+                            <StackPanel>
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource CaptureHotkeyLabel}" />
                                 <TextBox x:Name="CaptureHotkeyTextBox" Style="{StaticResource SoftTextBoxStyle}" />
                             </StackPanel>
-                            <StackPanel Grid.Column="2">
+                            <StackPanel Margin="0,12,0,0">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource LanguageLabel}" />
                                 <ComboBox x:Name="LanguageComboBox" Style="{StaticResource SoftComboBoxStyle}" ItemContainerStyle="{StaticResource SoftComboBoxItemStyle}" SelectedValuePath="Tag">
                                     <ComboBoxItem Tag="system" Content="{DynamicResource LanguageSystem}" />
@@ -99,9 +99,9 @@
                                     <ComboBoxItem Tag="zh-CN" Content="{DynamicResource LanguageSimplifiedChinese}" />
                                 </ComboBox>
                             </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </StackPanel>
         </ScrollViewer>
 
