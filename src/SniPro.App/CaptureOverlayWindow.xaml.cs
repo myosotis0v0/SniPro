@@ -405,6 +405,10 @@ public partial class CaptureOverlayWindow : Window
     private void UpdateSelectionControls(WpfPoint topLeft, double selectionWidth, double selectionHeight)
     {
         SelectionInfoBorder.Visibility = Visibility.Visible;
+        SelectionInfoBorder.Width = double.NaN;
+        SelectionInfoBorder.Height = double.NaN;
+        SelectionInfoText.InvalidateMeasure();
+        SelectionInfoBorder.InvalidateMeasure();
         SelectionInfoBorder.Measure(new WpfSize(double.PositiveInfinity, double.PositiveInfinity));
         var infoWidth = SelectionInfoBorder.DesiredSize.Width;
         var infoHeight = SelectionInfoBorder.DesiredSize.Height;
@@ -412,8 +416,6 @@ public partial class CaptureOverlayWindow : Window
         var infoTop = Math.Max(0, topLeft.Y - infoHeight - 4);
         Canvas.SetLeft(SelectionInfoBorder, infoLeft);
         Canvas.SetTop(SelectionInfoBorder, infoTop);
-        SelectionInfoBorder.Width = infoWidth;
-        SelectionInfoBorder.Height = infoHeight;
 
         SetHandlePosition(TopLeftHandle, topLeft.X, topLeft.Y);
         SetHandlePosition(TopRightHandle, topLeft.X + selectionWidth, topLeft.Y);
