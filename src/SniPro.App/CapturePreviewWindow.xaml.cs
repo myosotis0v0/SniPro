@@ -17,6 +17,7 @@ namespace SniPro.App;
 
 public partial class CapturePreviewWindow : Window
 {
+    private static readonly TimeSpan PreencodeDebounce = TimeSpan.FromMilliseconds(400);
     private readonly IReadOnlyList<DrawingBitmap> _frames;
     private readonly IReadOnlyList<BitmapImage> _frameImages;
     private readonly LocalizationService _localization;
@@ -25,9 +26,15 @@ public partial class CapturePreviewWindow : Window
     private readonly string _outputDirectory;
     private readonly int _maxColors;
     private readonly bool _enableDithering;
+    private readonly DispatcherTimer _preencodeTimer;
+    private readonly HashSet<PreparedGif> _preencodeJobs = [];
     private CancellationTokenSource? _saveCancellation;
+    private PreparedGif? _activePreencode;
+    private PreparedGif? _savingPreencode;
     private bool _updatingSliders;
     private bool _isSaving;
+    private bool _previewLoaded;
+    private bool _isClosed;
     private TimelineDragTarget _timelineDragTarget;
     private double _timelineDragStartX;
     private double _timelineDragOffsetX;
@@ -42,6 +49,16 @@ public partial class CapturePreviewWindow : Window
         Playhead,
         Start,
         End
+    }
+
+    private sealed class PreparedGif(int startFrame, int endFrame, string path)
+    {
+        public int StartFrame { get; } = startFrame;
+        public int EndFrame { get; } = endFrame;
+        public string Path { get; } = path;
+        public CancellationTokenSource Cancellation { get; } = new();
+        public Task Task { get; set; } = Task.CompletedTask;
+        public GifEncodingProgress? LatestProgress { get; set; }
     }
 
     public CapturePreviewWindow(
@@ -72,6 +89,11 @@ public partial class CapturePreviewWindow : Window
         _startFrame = 0;
         _endFrame = _frameImages.Count - 1;
         _currentFrame = _startFrame;
+        _preencodeTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher)
+        {
+            Interval = PreencodeDebounce
+        };
+        _preencodeTimer.Tick += PreencodeTimer_Tick;
 
         InitializeComponent();
         var thumbnailCount = Math.Min(8, _frameImages.Count);
@@ -317,6 +339,7 @@ public partial class CapturePreviewWindow : Window
 
         var startFrame = _startFrame;
         var endFrame = _endFrame;
+        var saved = false;
         using var cancellation = new CancellationTokenSource();
         _saveCancellation = cancellation;
         _isSaving = true;
@@ -344,16 +367,71 @@ public partial class CapturePreviewWindow : Window
                     UpdateSaveProgress(update);
                 }
             });
-            await GifEncoder.SaveAsync(
-                _frames,
-                _frameRate,
-                startFrame,
-                endFrame,
-                filePath,
-                cancellationToken: cancellation.Token,
-                maxColors: _maxColors,
-                enableDithering: _enableDithering,
-                progress: progress);
+            _preencodeTimer.Stop();
+            var prepared = _activePreencode;
+            if (prepared is not null &&
+                (prepared.StartFrame != startFrame || prepared.EndFrame != endFrame ||
+                 prepared.Cancellation.IsCancellationRequested))
+            {
+                RetireActivePreencode();
+                prepared = null;
+            }
+
+            _savingPreencode = prepared;
+            if (prepared?.LatestProgress is { } latestProgress)
+            {
+                UpdateSaveProgress(latestProgress);
+            }
+
+            var usePreparedGif = false;
+            if (prepared is not null)
+            {
+                try
+                {
+                    using var registration = cancellation.Token.Register(() =>
+                    {
+                        if (!prepared.Task.IsCompleted)
+                        {
+                            prepared.Cancellation.Cancel();
+                        }
+                    });
+                    await prepared.Task;
+                    cancellation.Token.ThrowIfCancellationRequested();
+                    await Task.Run(
+                        () => PublishPreparedGif(prepared.Path, filePath, cancellation.Token),
+                        cancellation.Token);
+                    usePreparedGif = true;
+                }
+                catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception)
+                {
+                    // A failed speculative encode must not prevent an ordinary save.
+                    RetireActivePreencode();
+                    _savingPreencode = null;
+                    SaveProgressBar.IsIndeterminate = true;
+                    SaveStatusText.Text = _localization.Get("PreviewSaving");
+                }
+            }
+
+            if (!usePreparedGif)
+            {
+                await GifEncoder.SaveAsync(
+                    _frames,
+                    _frameRate,
+                    startFrame,
+                    endFrame,
+                    filePath,
+                    cancellationToken: cancellation.Token,
+                    maxColors: _maxColors,
+                    enableDithering: _enableDithering,
+                    progress: progress);
+            }
+
+            RetireActivePreencode();
+            _savingPreencode = null;
 
             if (TryCopyGifToClipboard(filePath))
             {
@@ -367,6 +445,7 @@ public partial class CapturePreviewWindow : Window
                     "PreviewSavedClipboardFailed",
                     filePath);
             }
+            saved = true;
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
@@ -382,6 +461,7 @@ public partial class CapturePreviewWindow : Window
         }
         finally
         {
+            _savingPreencode = null;
             if (ReferenceEquals(_saveCancellation, cancellation))
             {
                 _saveCancellation = null;
@@ -394,6 +474,156 @@ public partial class CapturePreviewWindow : Window
             PlayButton.IsEnabled = true;
             CloseButton.IsEnabled = true;
             UiMotion.FadeIn(SaveStatusText);
+            if (!_isClosed && !saved && !cancellation.IsCancellationRequested &&
+                _activePreencode is null)
+            {
+                SchedulePreencode();
+            }
+        }
+    }
+
+    private void SchedulePreencode()
+    {
+        if (!_previewLoaded || _isClosed || _isSaving)
+        {
+            return;
+        }
+
+        if (_activePreencode is { } prepared &&
+            prepared.StartFrame == _startFrame && prepared.EndFrame == _endFrame &&
+            !prepared.Task.IsCanceled && !prepared.Task.IsFaulted)
+        {
+            return;
+        }
+
+        RetireActivePreencode();
+        _preencodeTimer.Stop();
+        _preencodeTimer.Start();
+    }
+
+    private void PreencodeTimer_Tick(object? sender, EventArgs e)
+    {
+        _preencodeTimer.Stop();
+        if (_isClosed || _isSaving)
+        {
+            return;
+        }
+
+        if (_preencodeJobs.Any(prepared => !prepared.Task.IsCompleted))
+        {
+            // Let a canceled encode release the shared frame buffers before starting another.
+            _preencodeTimer.Start();
+            return;
+        }
+
+        var prepared = new PreparedGif(
+            _startFrame,
+            _endFrame,
+            Path.Combine(Path.GetTempPath(), $"SniPro-preview-{Guid.NewGuid():N}.gif"));
+        var progress = new Progress<GifEncodingProgress>(update =>
+        {
+            prepared.LatestProgress = update;
+            if (_isSaving && ReferenceEquals(_savingPreencode, prepared))
+            {
+                UpdateSaveProgress(update);
+            }
+        });
+
+        try
+        {
+            prepared.Task = GifEncoder.SaveAsync(
+                _frames,
+                _frameRate,
+                prepared.StartFrame,
+                prepared.EndFrame,
+                prepared.Path,
+                cancellationToken: prepared.Cancellation.Token,
+                maxColors: _maxColors,
+                enableDithering: _enableDithering,
+                progress: progress);
+            _activePreencode = prepared;
+            _preencodeJobs.Add(prepared);
+            _ = ObservePreencodeAsync(prepared);
+        }
+        catch
+        {
+            prepared.Cancellation.Dispose();
+            // Saving still works through the ordinary encoder path.
+        }
+    }
+
+    private async Task ObservePreencodeAsync(PreparedGif prepared)
+    {
+        try
+        {
+            await prepared.Task;
+        }
+        catch (Exception)
+        {
+            // The save action retries a failed preparation through the ordinary path.
+        }
+        finally
+        {
+            _preencodeJobs.Remove(prepared);
+            if (!ReferenceEquals(_activePreencode, prepared))
+            {
+                TryDeletePreparedGif(prepared.Path);
+            }
+            prepared.Cancellation.Dispose();
+        }
+    }
+
+    private void RetireActivePreencode()
+    {
+        var prepared = _activePreencode;
+        _activePreencode = null;
+        if (prepared is null)
+        {
+            return;
+        }
+
+        if (prepared.Task.IsCompleted)
+        {
+            TryDeletePreparedGif(prepared.Path);
+        }
+        else
+        {
+            prepared.Cancellation.Cancel();
+        }
+    }
+
+    private static void PublishPreparedGif(
+        string preparedPath,
+        string destinationPath,
+        CancellationToken cancellationToken)
+    {
+        var temporaryPath = destinationPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            File.Copy(preparedPath, temporaryPath);
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temporaryPath, destinationPath, overwrite: true);
+        }
+        finally
+        {
+            TryDeletePreparedGif(temporaryPath);
+        }
+    }
+
+    private static void TryDeletePreparedGif(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+            // Cleanup must not hide an encoding or saving error.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Cleanup must not hide an encoding or saving error.
         }
     }
 
@@ -478,6 +708,7 @@ public partial class CapturePreviewWindow : Window
 
     private void ApplySliderState(int startFrame, int endFrame, int currentFrame)
     {
+        var previousRange = (_startFrame, _endFrame);
         _startFrame = Math.Clamp(startFrame, 0, _frameImages.Count - 1);
         _endFrame = Math.Clamp(endFrame, _startFrame, _frameImages.Count - 1);
         _currentFrame = Math.Clamp(currentFrame, _startFrame, _endFrame);
@@ -501,6 +732,10 @@ public partial class CapturePreviewWindow : Window
             _startFrame + 1,
             _endFrame + 1);
         UpdateTimelineVisuals();
+        if (previousRange != (_startFrame, _endFrame))
+        {
+            SchedulePreencode();
+        }
     }
 
     private void UpdateTimelineVisuals()
@@ -562,17 +797,47 @@ public partial class CapturePreviewWindow : Window
 
     private void CapturePreviewWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        _previewLoaded = true;
+        SchedulePreencode();
         UiMotion.Reveal(PreviewHeader);
         UiMotion.Reveal(PreviewStage, 45);
         UiMotion.Reveal(TimelinePanel, 100);
     }
 
-    private void CapturePreviewWindow_Closed(object? sender, EventArgs e)
+    private async void CapturePreviewWindow_Closed(object? sender, EventArgs e)
     {
+        _isClosed = true;
+        _preencodeTimer.Stop();
+        _preencodeTimer.Tick -= PreencodeTimer_Tick;
         _saveCancellation?.Cancel();
         EndTimelineDrag();
         _playTimer.Stop();
         _playTimer.Tick -= PlayTimer_Tick;
+        var pending = _preencodeJobs.ToArray();
+        foreach (var prepared in pending)
+        {
+            if (!prepared.Task.IsCompleted)
+            {
+                prepared.Cancellation.Cancel();
+            }
+        }
+        try
+        {
+            await Task.WhenAll(pending.Select(prepared => prepared.Task));
+        }
+        catch (Exception)
+        {
+            // Canceled or failed background work must not outlive its frame buffers.
+        }
+        foreach (var prepared in pending)
+        {
+            TryDeletePreparedGif(prepared.Path);
+        }
+        if (_activePreencode is { } active)
+        {
+            TryDeletePreparedGif(active.Path);
+            _activePreencode = null;
+        }
         ScreenRecorder.DisposeFrames(_frames);
     }
 }
