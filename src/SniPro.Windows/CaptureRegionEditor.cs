@@ -20,7 +20,7 @@ public static class CaptureRegionEditor
 {
     public static bool ShouldForwardClick(bool isRecording, bool hasSelection, CaptureRegionHit hit, bool wasDrag)
     {
-        return !wasDrag && (isRecording || !hasSelection || hit == CaptureRegionHit.Outside);
+        return !wasDrag && (isRecording || !hasSelection || hit is CaptureRegionHit.Inside or CaptureRegionHit.Outside);
     }
 
     public static CaptureRegionHit HitTest(CaptureRegion region, int x, int y, int tolerance)

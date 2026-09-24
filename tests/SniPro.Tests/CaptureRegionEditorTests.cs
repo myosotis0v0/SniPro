@@ -10,14 +10,15 @@ public sealed class CaptureRegionEditorTests
 
     [Theory]
     [InlineData(false, false, CaptureRegionHit.Inside, false, true)]
-    [InlineData(false, true, CaptureRegionHit.Inside, false, false)]
+    [InlineData(false, true, CaptureRegionHit.Inside, false, true)]
+    [InlineData(false, true, CaptureRegionHit.Inside, true, false)]
     [InlineData(false, true, CaptureRegionHit.Left, false, false)]
     [InlineData(false, true, CaptureRegionHit.Outside, false, true)]
     [InlineData(true, true, CaptureRegionHit.Inside, false, true)]
     [InlineData(true, true, CaptureRegionHit.Outside, false, true)]
     [InlineData(true, true, CaptureRegionHit.Inside, true, false)]
     [InlineData(false, true, CaptureRegionHit.Outside, true, false)]
-    public void ShouldForwardClick_OnlyForOutsideOrRecordingClicks(
+    public void ShouldForwardClick_DistinguishesInteriorClickFromDrag(
         bool isRecording,
         bool hasSelection,
         CaptureRegionHit hit,

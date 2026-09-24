@@ -52,7 +52,7 @@
     <sys:String x:Key="TrayCaptureHotkeyTitle">已收到截屏快捷键</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyMessage">请拖动选择截屏区域。</sys:String>
     <sys:String x:Key="CaptureOverlayTitle">选择截屏区域</sys:String>
-    <sys:String x:Key="CaptureOverlayHint">拖动创建区域；框内拖动可移动、边缘可缩放。框外单击可操作下方窗口，按 Esc 取消。</sys:String>
+    <sys:String x:Key="CaptureOverlayHint">拖动创建区域；框内拖动可移动、边缘可缩放。单击可操作下方窗口，按 Esc 取消。</sys:String>
     <sys:String x:Key="CaptureOverlayRecordingHint">正在录制。点击“结束录制”或按 Enter 完成。</sys:String>
     <sys:String x:Key="CaptureOverlayFinishingHint">正在完成录制，请稍候……</sys:String>
     <sys:String x:Key="StartRecordingButton">开始录制</sys:String>

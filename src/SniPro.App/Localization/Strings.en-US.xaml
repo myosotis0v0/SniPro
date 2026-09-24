@@ -52,7 +52,7 @@
     <sys:String x:Key="TrayCaptureHotkeyTitle">Capture hotkey received</sys:String>
     <sys:String x:Key="TrayCaptureHotkeyMessage">Drag to select a capture region.</sys:String>
     <sys:String x:Key="CaptureOverlayTitle">Select capture region</sys:String>
-    <sys:String x:Key="CaptureOverlayHint">Drag to select; drag inside to move or an edge to resize. Click outside to use the app below. Esc cancels.</sys:String>
+    <sys:String x:Key="CaptureOverlayHint">Drag to select; drag inside to move or an edge to resize. Click to use the app below. Esc cancels.</sys:String>
     <sys:String x:Key="CaptureOverlayRecordingHint">Recording. Click Stop recording or press Enter to finish.</sys:String>
     <sys:String x:Key="CaptureOverlayFinishingHint">Finishing the recording...</sys:String>
     <sys:String x:Key="StartRecordingButton">Start recording</sys:String>
