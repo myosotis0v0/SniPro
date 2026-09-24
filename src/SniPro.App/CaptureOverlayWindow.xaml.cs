@@ -10,6 +10,7 @@ using SniPro.Windows;
 using WpfButton = System.Windows.Controls.Button;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
 using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
+using WpfCursors = System.Windows.Input.Cursors;
 using WpfPoint = System.Windows.Point;
 using WpfRect = System.Windows.Rect;
 using WpfSize = System.Windows.Size;
@@ -30,23 +31,30 @@ public partial class CaptureOverlayWindow : Window
 {
     private const int SwpNoActivate = 0x0010;
     private const int SwpShowWindow = 0x0040;
-    private const double HandleSize = 12;
     private const double OverlayControlEdgeMargin = 24;
     private const double OverlayControlGap = 8;
     private const double RecordingOutlineMargin = 4;
     private const double MaxHintWidth = 720;
+    private const int DragThresholdPixels = 4;
+    private const int EdgeTolerancePixels = 8;
     private static readonly IntPtr HwndTopmost = new(-1);
 
     private readonly PixelRect _virtualBounds;
     private readonly PixelRect _initialMonitorBounds;
     private CaptureRegion? _selectedRegion;
-    private CaptureRegion? _resizeBaseRegion;
+    private CaptureRegion? _dragBaseRegion;
     private (int X, int Y)? _dragStart;
-    private ResizeHandle _activeResizeHandle;
+    private CaptureRegionHit _dragHit;
     private bool _isDragging;
+    private bool _dragMoved;
     private bool _isRecording;
     private bool _stopRequested;
     private bool _selectionControlsVisible;
+    private bool _isForwardingClick;
+    private bool _isClosed;
+    private string? _measuredHintText;
+    private double _measuredHintMaxWidth;
+    private WpfSize _measuredHintSize;
 
     public CaptureOverlayWindow(LocalizationService localization)
     {
@@ -108,7 +116,7 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
-        if (_isRecording)
+        if (_isForwardingClick)
         {
             e.Handled = true;
             return;
@@ -116,74 +124,75 @@ public partial class CaptureOverlayWindow : Window
 
         var point = GetCursorPosition();
         _dragStart = point;
-        _resizeBaseRegion = null;
-        _activeResizeHandle = ResizeHandle.None;
-        _selectedRegion = null;
+        _dragBaseRegion = _selectedRegion;
+        _dragHit = _isRecording
+            ? CaptureRegionHit.Outside
+            : _selectedRegion is { } region
+                ? CaptureRegionEditor.HitTest(region, point.X, point.Y, EdgeTolerancePixels)
+                : CaptureRegionHit.Inside;
         _isDragging = true;
-        HideSelectionVisuals();
-        Mouse.Capture(OverlayRoot);
+        _dragMoved = false;
+        if (!Mouse.Capture(OverlayRoot))
+        {
+            ResetDrag();
+        }
         e.Handled = true;
     }
 
     private void OverlayRoot_MouseMove(object sender, WpfMouseEventArgs e)
     {
-        if (!_isDragging || _isRecording)
+        if (!_isDragging)
         {
+            UpdateSelectionCursor();
+            return;
+        }
+
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            ResetDrag();
             return;
         }
 
         var point = GetCursorPosition();
-        if (_activeResizeHandle == ResizeHandle.None)
+        if (!_dragMoved && !MovedBeyondThreshold(point))
         {
-            UpdateNewSelection(point);
+            return;
         }
-        else
-        {
-            UpdateResizedSelection(point);
-        }
+
+        _dragMoved = true;
+        UpdateDraggedSelection(point);
+        e.Handled = true;
     }
 
     private void OverlayRoot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_isDragging || _isRecording)
+        if (!_isDragging)
         {
             return;
         }
 
         var point = GetCursorPosition();
-        if (_activeResizeHandle == ResizeHandle.None)
+        var wasDrag = _dragMoved || MovedBeyondThreshold(point);
+        if (wasDrag)
         {
-            UpdateNewSelection(point);
-        }
-        else
-        {
-            UpdateResizedSelection(point);
+            UpdateDraggedSelection(point);
         }
 
-        _isDragging = false;
-        _activeResizeHandle = ResizeHandle.None;
-        _resizeBaseRegion = null;
-        Mouse.Capture(null);
-        ShowSelectionControls();
+        ResetDrag();
+        if (!wasDrag)
+        {
+            ForwardClickToUnderlyingApplication(point);
+        }
+
         e.Handled = true;
     }
 
-    private void ResizeHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void OverlayRoot_LostMouseCapture(object sender, WpfMouseEventArgs e)
     {
-        if (_isRecording ||
-            _selectedRegion is not { } region ||
-            sender is not FrameworkElement element ||
-            element.Tag is not string tag ||
-            !Enum.TryParse(tag, out ResizeHandle resizeHandle))
-        {
-            return;
-        }
-
-        _resizeBaseRegion = region;
-        _activeResizeHandle = resizeHandle;
-        _isDragging = true;
-        Mouse.Capture(OverlayRoot);
-        e.Handled = true;
+        _isDragging = false;
+        _dragMoved = false;
+        _dragStart = null;
+        _dragBaseRegion = null;
     }
 
     private void StartRecordingButton_Click(object sender, RoutedEventArgs e)
@@ -230,67 +239,120 @@ public partial class CaptureOverlayWindow : Window
         }
     }
 
-    private void UpdateNewSelection((int X, int Y) current)
+    private bool MovedBeyondThreshold((int X, int Y) current)
     {
-        if (_dragStart is not { } start ||
-            !CaptureRegion.TryCreate(start.X, start.Y, current.X, current.Y, out var region))
+        return _dragStart is { } start &&
+            (Math.Abs(current.X - start.X) >= DragThresholdPixels ||
+             Math.Abs(current.Y - start.Y) >= DragThresholdPixels);
+    }
+
+    private void UpdateDraggedSelection((int X, int Y) current)
+    {
+        if (_dragStart is not { } start || _dragHit == CaptureRegionHit.Outside)
         {
             return;
         }
 
-        ApplySelection(region);
-    }
-
-    private void UpdateResizedSelection((int X, int Y) current)
-    {
-        if (_resizeBaseRegion is not { } baseRegion ||
-            !TryCreateResizedRegion(baseRegion, current, out var region))
+        var x = Math.Clamp(current.X, _virtualBounds.X, _virtualBounds.Right);
+        var y = Math.Clamp(current.Y, _virtualBounds.Y, _virtualBounds.Bottom);
+        if (_dragBaseRegion is not { } baseRegion)
         {
+            if (CaptureRegion.TryCreate(start.X, start.Y, x, y, out var newRegion))
+            {
+                ApplySelection(newRegion);
+            }
             return;
         }
 
+        var deltaX = x - start.X;
+        var deltaY = y - start.Y;
+        var region = _dragHit == CaptureRegionHit.Inside
+            ? CaptureRegionEditor.Move(baseRegion, deltaX, deltaY, _virtualBounds)
+            : CaptureRegionEditor.Resize(baseRegion, _dragHit, deltaX, deltaY, _virtualBounds);
         ApplySelection(region);
     }
 
-    private bool TryCreateResizedRegion(
-        CaptureRegion baseRegion,
-        (int X, int Y) current,
-        out CaptureRegion region)
+    private void ResetDrag()
     {
-        return _activeResizeHandle switch
+        _isDragging = false;
+        _dragMoved = false;
+        _dragStart = null;
+        _dragBaseRegion = null;
+        _dragHit = CaptureRegionHit.Outside;
+        if (ReferenceEquals(Mouse.Captured, OverlayRoot))
         {
-            ResizeHandle.TopLeft => CaptureRegion.TryCreate(
-                current.X,
-                current.Y,
-                baseRegion.Right,
-                baseRegion.Bottom,
-                out region),
-            ResizeHandle.TopRight => CaptureRegion.TryCreate(
-                baseRegion.X,
-                current.Y,
-                current.X,
-                baseRegion.Bottom,
-                out region),
-            ResizeHandle.BottomLeft => CaptureRegion.TryCreate(
-                current.X,
-                baseRegion.Y,
-                baseRegion.Right,
-                current.Y,
-                out region),
-            ResizeHandle.BottomRight => CaptureRegion.TryCreate(
-                baseRegion.X,
-                baseRegion.Y,
-                current.X,
-                current.Y,
-                out region),
-            _ => InvalidRegion(out region)
+            Mouse.Capture(null);
+        }
+    }
+
+    private void UpdateSelectionCursor()
+    {
+        if (_isRecording)
+        {
+            OverlayRoot.Cursor = WpfCursors.Arrow;
+            return;
+        }
+
+        if (_selectedRegion is not { } region)
+        {
+            OverlayRoot.Cursor = WpfCursors.Cross;
+            return;
+        }
+
+        var point = GetCursorPosition();
+        OverlayRoot.Cursor = CaptureRegionEditor.HitTest(
+            region, point.X, point.Y, EdgeTolerancePixels) switch
+        {
+            CaptureRegionHit.TopLeft or CaptureRegionHit.BottomRight => WpfCursors.SizeNWSE,
+            CaptureRegionHit.TopRight or CaptureRegionHit.BottomLeft => WpfCursors.SizeNESW,
+            CaptureRegionHit.Left or CaptureRegionHit.Right => WpfCursors.SizeWE,
+            CaptureRegionHit.Top or CaptureRegionHit.Bottom => WpfCursors.SizeNS,
+            CaptureRegionHit.Inside => WpfCursors.SizeAll,
+            _ => WpfCursors.Arrow
         };
     }
 
-    private static bool InvalidRegion(out CaptureRegion region)
+    private async void ForwardClickToUnderlyingApplication((int X, int Y) point)
     {
-        region = default;
-        return false;
+        if (_isClosed || _isForwardingClick)
+        {
+            return;
+        }
+
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        Marshal.SetLastPInvokeError(0);
+        var originalStyle = NativeMethods.GetWindowLong(handle, NativeMethods.GwlExStyle);
+        if (originalStyle == 0 && Marshal.GetLastPInvokeError() != 0)
+        {
+            return;
+        }
+
+        _isForwardingClick = true;
+        try
+        {
+            // The layered overlay consumed the physical click; replay it while native hit testing skips this window.
+            if (!NativeMethods.SetExtendedStyle(handle, originalStyle | NativeMethods.WsExTransparent))
+            {
+                return;
+            }
+
+            NativeMethods.SetCursorPos(point.X, point.Y);
+            NativeMethods.SendLeftClick();
+            await Task.Delay(120);
+        }
+        finally
+        {
+            if (!_isClosed)
+            {
+                NativeMethods.SetExtendedStyle(handle, originalStyle);
+            }
+            _isForwardingClick = false;
+        }
     }
 
     private void ApplySelection(CaptureRegion region)
@@ -314,11 +376,11 @@ public partial class CaptureOverlayWindow : Window
         }
         else
         {
-            SelectionInfoBorder.Visibility = Visibility.Collapsed;
-            SetHandlesVisibility(Visibility.Collapsed);
+            ShowSelectionControls();
         }
 
         UpdateDimOverlay();
+        UpdateOverlayControls();
     }
 
     private void ShowSelectionControls()
@@ -357,6 +419,10 @@ public partial class CaptureOverlayWindow : Window
         SetHandlePosition(TopRightHandle, topLeft.X + selectionWidth, topLeft.Y);
         SetHandlePosition(BottomLeftHandle, topLeft.X, topLeft.Y + selectionHeight);
         SetHandlePosition(BottomRightHandle, topLeft.X + selectionWidth, topLeft.Y + selectionHeight);
+        SetHandlePosition(TopHandle, topLeft.X + selectionWidth / 2, topLeft.Y);
+        SetHandlePosition(RightHandle, topLeft.X + selectionWidth, topLeft.Y + selectionHeight / 2);
+        SetHandlePosition(BottomHandle, topLeft.X + selectionWidth / 2, topLeft.Y + selectionHeight);
+        SetHandlePosition(LeftHandle, topLeft.X, topLeft.Y + selectionHeight / 2);
         SetHandlesVisibility(Visibility.Visible);
     }
 
@@ -367,6 +433,7 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
+        ResetDrag();
         _isRecording = true;
         _stopRequested = false;
         SelectionRectangle.Visibility = Visibility.Collapsed;
@@ -436,41 +503,22 @@ public partial class CaptureOverlayWindow : Window
         Close();
     }
 
-    private void HideSelectionVisuals()
-    {
-        SelectionRectangle.Visibility = Visibility.Collapsed;
-        SelectionInfoBorder.Visibility = Visibility.Collapsed;
-        RecordingOutline.BeginAnimation(UIElement.OpacityProperty, null);
-        RecordingOutline.Opacity = 0.9;
-        RecordingOutline.Visibility = Visibility.Collapsed;
-        StartRecordingButton.Visibility = Visibility.Collapsed;
-        StartRecordingButton.IsEnabled = true;
-        _selectionControlsVisible = false;
-        HintText.SetResourceReference(TextBlock.TextProperty, "CaptureOverlayHint");
-        HintBorder.Padding = new Thickness(17, 10, 17, 10);
-        RecordingDot.BeginAnimation(UIElement.OpacityProperty, null);
-        RecordingDot.Opacity = 1;
-        RecordingDot.Visibility = Visibility.Collapsed;
-        StartRecordingButton.SetResourceReference(
-            ContentControl.ContentProperty,
-            "StartRecordingButton");
-        SetHandlesVisibility(Visibility.Collapsed);
-        UpdateDimOverlay();
-        UpdateOverlayControls();
-    }
-
     private void SetHandlesVisibility(Visibility visibility)
     {
         TopLeftHandle.Visibility = visibility;
         TopRightHandle.Visibility = visibility;
         BottomLeftHandle.Visibility = visibility;
         BottomRightHandle.Visibility = visibility;
+        TopHandle.Visibility = visibility;
+        RightHandle.Visibility = visibility;
+        BottomHandle.Visibility = visibility;
+        LeftHandle.Visibility = visibility;
     }
 
     private static void SetHandlePosition(FrameworkElement handle, double x, double y)
     {
-        Canvas.SetLeft(handle, x - HandleSize / 2);
-        Canvas.SetTop(handle, y - HandleSize / 2);
+        Canvas.SetLeft(handle, x - handle.Width / 2);
+        Canvas.SetTop(handle, y - handle.Height / 2);
     }
 
     private void UpdateRecordingOutline(CaptureRegion region)
@@ -642,6 +690,12 @@ public partial class CaptureOverlayWindow : Window
 
     private WpfSize MeasureHint(double maxWidth)
     {
+        if (_measuredHintText == HintText.Text &&
+            Math.Abs(_measuredHintMaxWidth - maxWidth) < 0.5)
+        {
+            return _measuredHintSize;
+        }
+
         HintBorder.Width = double.NaN;
         HintBorder.Height = double.NaN;
         HintBorder.MaxWidth = maxWidth;
@@ -650,7 +704,10 @@ public partial class CaptureOverlayWindow : Window
         var width = Math.Min(maxWidth, Math.Max(1, HintBorder.DesiredSize.Width));
         HintBorder.Width = width;
         HintBorder.Measure(new WpfSize(width, double.PositiveInfinity));
-        return new WpfSize(width, Math.Max(1, HintBorder.DesiredSize.Height));
+        _measuredHintText = HintText.Text;
+        _measuredHintMaxWidth = maxWidth;
+        _measuredHintSize = new WpfSize(width, Math.Max(1, HintBorder.DesiredSize.Height));
+        return _measuredHintSize;
     }
 
     private static void SetOverlayPosition(FrameworkElement element, double left, double top)
@@ -674,12 +731,12 @@ public partial class CaptureOverlayWindow : Window
 
     private void CaptureOverlayWindow_Closed(object? sender, EventArgs e)
     {
+        _isClosed = true;
         RecordingDot.BeginAnimation(UIElement.OpacityProperty, null);
         RecordingOutline.BeginAnimation(UIElement.OpacityProperty, null);
         if (_isDragging)
         {
-            Mouse.Capture(null);
-            _isDragging = false;
+            ResetDrag();
         }
 
         SourceInitialized -= CaptureOverlayWindow_SourceInitialized;
@@ -704,22 +761,62 @@ public partial class CaptureOverlayWindow : Window
         return null;
     }
 
-    private enum ResizeHandle
-    {
-        None,
-        TopLeft,
-        TopRight,
-        BottomLeft,
-        BottomRight
-    }
-
     private readonly record struct NativePoint(int X, int Y);
 
     private static class NativeMethods
     {
+        public const int GwlExStyle = -20;
+        public const int WsExTransparent = 0x00000020;
+        private const int SwpNoSize = 0x0001;
+        private const int SwpNoMove = 0x0002;
+        private const int SwpNoZOrder = 0x0004;
+        private const int SwpFrameChanged = 0x0020;
+        private const uint InputMouse = 0;
+        private const uint MouseLeftDown = 0x0002;
+        private const uint MouseLeftUp = 0x0004;
+
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool GetCursorPos(out NativePoint point);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetCursorPos(int x, int y);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
+        public static extern int GetWindowLong(IntPtr hWnd, int index);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+        private static extern int SetWindowLong(IntPtr hWnd, int index, int value);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint SendInput(uint count, [In] NativeInput[] inputs, int size);
+
+        public static bool SetExtendedStyle(IntPtr handle, int style)
+        {
+            Marshal.SetLastPInvokeError(0);
+            var previous = SetWindowLong(handle, GwlExStyle, style);
+            if (previous == 0 && Marshal.GetLastPInvokeError() != 0)
+            {
+                return false;
+            }
+
+            return SetWindowPos(
+                handle,
+                IntPtr.Zero,
+                0, 0, 0, 0,
+                SwpNoSize | SwpNoMove | SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
+        }
+
+        public static bool SendLeftClick()
+        {
+            var inputs = new[]
+            {
+                new NativeInput { Type = InputMouse, Mouse = new NativeMouseInput { Flags = MouseLeftDown } },
+                new NativeInput { Type = InputMouse, Mouse = new NativeMouseInput { Flags = MouseLeftUp } }
+            };
+            return SendInput(2, inputs, Marshal.SizeOf<NativeInput>()) == 2;
+        }
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -731,5 +828,23 @@ public partial class CaptureOverlayWindow : Window
             int width,
             int height,
             int flags);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NativeInput
+        {
+            public uint Type;
+            public NativeMouseInput Mouse;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NativeMouseInput
+        {
+            public int X;
+            public int Y;
+            public uint MouseData;
+            public uint Flags;
+            public uint Time;
+            public IntPtr ExtraInfo;
+        }
     }
 }

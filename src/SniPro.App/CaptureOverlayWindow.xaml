@@ -18,7 +18,8 @@
           Background="Transparent"
           MouseLeftButtonDown="OverlayRoot_MouseLeftButtonDown"
           MouseMove="OverlayRoot_MouseMove"
-          MouseLeftButtonUp="OverlayRoot_MouseLeftButtonUp">
+          MouseLeftButtonUp="OverlayRoot_MouseLeftButtonUp"
+          LostMouseCapture="OverlayRoot_LostMouseCapture">
         <Path x:Name="DimOverlayPath"
               Fill="#880F0B19"
               IsHitTestVisible="False" />
@@ -89,41 +90,37 @@
                 Panel.ZIndex="15"
                 Background="Transparent">
             <Ellipse x:Name="TopLeftHandle"
-                       Tag="TopLeft"
                        Width="12"
                        Height="12"
                        Visibility="Collapsed"
                        Fill="White"
                        Stroke="#7350AE"
-                       StrokeThickness="2"
-                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+                       StrokeThickness="2" />
             <Ellipse x:Name="TopRightHandle"
-                       Tag="TopRight"
                        Width="12"
                        Height="12"
                        Visibility="Collapsed"
                        Fill="White"
                        Stroke="#7350AE"
-                       StrokeThickness="2"
-                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+                       StrokeThickness="2" />
             <Ellipse x:Name="BottomLeftHandle"
-                       Tag="BottomLeft"
                        Width="12"
                        Height="12"
                        Visibility="Collapsed"
                        Fill="White"
                        Stroke="#7350AE"
-                       StrokeThickness="2"
-                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+                       StrokeThickness="2" />
             <Ellipse x:Name="BottomRightHandle"
-                       Tag="BottomRight"
                        Width="12"
                        Height="12"
                        Visibility="Collapsed"
                        Fill="White"
                        Stroke="#7350AE"
-                       StrokeThickness="2"
-                       MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
+                       StrokeThickness="2" />
+            <Ellipse x:Name="TopHandle" Width="9" Height="9" Visibility="Collapsed" Fill="White" Stroke="#7350AE" StrokeThickness="2" />
+            <Ellipse x:Name="RightHandle" Width="9" Height="9" Visibility="Collapsed" Fill="White" Stroke="#7350AE" StrokeThickness="2" />
+            <Ellipse x:Name="BottomHandle" Width="9" Height="9" Visibility="Collapsed" Fill="White" Stroke="#7350AE" StrokeThickness="2" />
+            <Ellipse x:Name="LeftHandle" Width="9" Height="9" Visibility="Collapsed" Fill="White" Stroke="#7350AE" StrokeThickness="2" />
         </Canvas>
     </Grid>
 </Window>
