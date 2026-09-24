@@ -3,7 +3,6 @@ using SniPro.Core;
 using SniPro.Windows;
 using WinForms = System.Windows.Forms;
 using WpfBrush = System.Windows.Media.Brush;
-using WpfBrushes = System.Windows.Media.Brushes;
 
 namespace SniPro.App;
 
@@ -40,7 +39,7 @@ public partial class MainWindow : Window
         LanguageComboBox.SelectedValue = IsSupportedLanguageCode(_loadedSettings.LanguageCode)
             ? _loadedSettings.LanguageCode
             : LanguageCodes.System;
-        SetStatus(_localization.Get("StatusSettingsLoaded"), WpfBrushes.Gray);
+        SetStatus(_localization.Get("StatusSettingsLoaded"), ThemeBrush("MutedBrush"));
     }
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -68,20 +67,20 @@ public partial class MainWindow : Window
         {
             _saveSettings(settings);
             _loadedSettings = settings;
-            SetStatus(_localization.Get("StatusSettingsSaved"), WpfBrushes.DarkGreen);
+            SetStatus(_localization.Get("StatusSettingsSaved"), ThemeBrush("SuccessBrush"));
         }
         catch (Exception exception)
         {
             SetStatus(
                 _localization.Format("ErrorCouldNotSave", exception.Message),
-                WpfBrushes.DarkRed);
+                ThemeBrush("ErrorBrush"));
         }
     }
 
     private void ResetButton_Click(object sender, RoutedEventArgs e)
     {
         LoadSettings(AppSettingsDefaults.Create());
-        SetStatus(_localization.Get("StatusDefaultsLoaded"), WpfBrushes.Gray);
+        SetStatus(_localization.Get("StatusDefaultsLoaded"), ThemeBrush("MutedBrush"));
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -91,7 +90,7 @@ public partial class MainWindow : Window
 
     public void ShowCaptureHotkeyReceived()
     {
-        SetStatus(_localization.Get("StatusCaptureHotkeyReceived"), WpfBrushes.DarkBlue);
+        SetStatus(_localization.Get("StatusCaptureHotkeyReceived"), ThemeBrush("AccentBrush"));
     }
 
     private bool TryBuildSettings(out AppSettings settings)
@@ -101,19 +100,19 @@ public partial class MainWindow : Window
 
         if (!int.TryParse(FrameRateTextBox.Text, out var frameRate) || frameRate is < 1 or > 30)
         {
-            SetStatus(_localization.Get("ErrorFrameRate"), WpfBrushes.DarkRed);
+            SetStatus(_localization.Get("ErrorFrameRate"), ThemeBrush("ErrorBrush"));
             return false;
         }
 
         if (!int.TryParse(ScalePercentTextBox.Text, out var scale) || scale is < 25 or > 100)
         {
-            SetStatus(_localization.Get("ErrorScale"), WpfBrushes.DarkRed);
+            SetStatus(_localization.Get("ErrorScale"), ThemeBrush("ErrorBrush"));
             return false;
         }
 
         if (MaxColorsComboBox.SelectedItem is not int maxColors)
         {
-            SetStatus(_localization.Get("ErrorMaxColors"), WpfBrushes.DarkRed);
+            SetStatus(_localization.Get("ErrorMaxColors"), ThemeBrush("ErrorBrush"));
             return false;
         }
 
@@ -122,7 +121,7 @@ public partial class MainWindow : Window
                 out var hotkey,
                 out var hotkeyError))
         {
-            SetStatus(_localization.GetHotkeyError(hotkeyError), WpfBrushes.DarkRed);
+            SetStatus(_localization.GetHotkeyError(hotkeyError), ThemeBrush("ErrorBrush"));
             return false;
         }
 
@@ -146,5 +145,17 @@ public partial class MainWindow : Window
     {
         StatusText.Text = message;
         StatusText.Foreground = color;
+        UiMotion.FadeIn(StatusText);
+    }
+
+    private WpfBrush ThemeBrush(string key) => (WpfBrush)FindResource(key);
+
+    private void MainWindow_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is true)
+        {
+            UiMotion.Reveal(SettingsHeader);
+            UiMotion.Reveal(SettingsContent, 75);
+        }
     }
 }

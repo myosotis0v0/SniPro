@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\SniProIcon.ico" />
+    <Resource Include="Assets\SniProIcon.png" />
     <ProjectReference Include="..\SniPro.Core\SniPro.Core.csproj" />
     <ProjectReference Include="..\SniPro.Windows\SniPro.Windows.csproj" />
   </ItemGroup>

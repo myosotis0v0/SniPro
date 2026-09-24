@@ -3,6 +3,17 @@
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
     <sys:String x:Key="SettingsWindowTitle">SniPro 设置</sys:String>
     <sys:String x:Key="AppSettingsTitle">SniPro 设置</sys:String>
+    <sys:String x:Key="SettingsSubtitle">轻巧地录制，恰到好处地分享。</sys:String>
+    <sys:String x:Key="OutputSectionTitle">保存位置</sys:String>
+    <sys:String x:Key="OutputSectionDescription">录制完成后自动保存至此目录，并将 GIF 复制到剪切板。</sys:String>
+    <sys:String x:Key="CaptureSectionTitle">画面质量</sys:String>
+    <sys:String x:Key="CaptureSectionDescription">平衡清晰度、流畅度与文件大小。</sys:String>
+    <sys:String x:Key="DitheringDescription">适合渐变画面；录制界面文字时通常建议关闭。</sys:String>
+    <sys:String x:Key="BehaviorSectionTitle">快捷操作</sys:String>
+    <sys:String x:Key="BehaviorSectionDescription">让 SniPro 随时待命，不占用桌面空间。</sys:String>
+    <sys:String x:Key="PreviewSubtitle">检查画面并裁剪录制范围。</sys:String>
+    <sys:String x:Key="PreviewTrimTitle">裁剪时间轴</sys:String>
+    <sys:String x:Key="PreviewSaveHint">保存至设置目录，并复制 GIF 到剪切板。</sys:String>
     <sys:String x:Key="OutputDirectoryLabel">输出目录</sys:String>
     <sys:String x:Key="BrowseButton">浏览...</sys:String>
     <sys:String x:Key="FrameRateLabel">帧率（FPS）</sys:String>

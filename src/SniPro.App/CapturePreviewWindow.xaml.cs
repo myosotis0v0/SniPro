@@ -9,7 +9,7 @@ using System.Windows.Threading;
 using SniPro.Windows;
 using DrawingBitmap = System.Drawing.Bitmap;
 using WinForms = System.Windows.Forms;
-using WpfBrushes = System.Windows.Media.Brushes;
+using WpfBrush = System.Windows.Media.Brush;
 
 namespace SniPro.App;
 
@@ -152,8 +152,10 @@ public partial class CapturePreviewWindow : Window
         SaveGifButton.IsEnabled = false;
         PlayButton.IsEnabled = false;
         CloseButton.IsEnabled = false;
-        SaveStatusText.Foreground = WpfBrushes.Gray;
+        SaveProgressBar.Visibility = Visibility.Visible;
+        SaveStatusText.Foreground = ThemeBrush("AccentBrush");
         SaveStatusText.Text = _localization.Get("PreviewSaving");
+        UiMotion.FadeIn(SaveStatusText);
 
         try
         {
@@ -170,12 +172,12 @@ public partial class CapturePreviewWindow : Window
 
             if (TryCopyGifToClipboard(filePath))
             {
-                SaveStatusText.Foreground = WpfBrushes.DarkGreen;
+                SaveStatusText.Foreground = ThemeBrush("SuccessBrush");
                 SaveStatusText.Text = _localization.Format("PreviewSaved", filePath);
             }
             else
             {
-                SaveStatusText.Foreground = WpfBrushes.DarkGoldenrod;
+                SaveStatusText.Foreground = ThemeBrush("WarningBrush");
                 SaveStatusText.Text = _localization.Format(
                     "PreviewSavedClipboardFailed",
                     filePath);
@@ -183,12 +185,12 @@ public partial class CapturePreviewWindow : Window
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            SaveStatusText.Foreground = WpfBrushes.Gray;
+            SaveStatusText.Foreground = ThemeBrush("MutedBrush");
             SaveStatusText.Text = _localization.Get("PreviewSaveCancelled");
         }
         catch (Exception exception)
         {
-            SaveStatusText.Foreground = WpfBrushes.DarkRed;
+            SaveStatusText.Foreground = ThemeBrush("ErrorBrush");
             SaveStatusText.Text = _localization.Format(
                 "PreviewSaveFailed",
                 exception.Message);
@@ -201,9 +203,11 @@ public partial class CapturePreviewWindow : Window
             }
 
             _isSaving = false;
+            SaveProgressBar.Visibility = Visibility.Collapsed;
             SaveGifButton.IsEnabled = true;
             PlayButton.IsEnabled = true;
             CloseButton.IsEnabled = true;
+            UiMotion.FadeIn(SaveStatusText);
         }
     }
 
@@ -314,8 +318,17 @@ public partial class CapturePreviewWindow : Window
 
         e.Cancel = true;
         _saveCancellation?.Cancel();
-        SaveStatusText.Foreground = WpfBrushes.Gray;
+        SaveStatusText.Foreground = ThemeBrush("MutedBrush");
         SaveStatusText.Text = _localization.Get("PreviewSaveCancelling");
+    }
+
+    private WpfBrush ThemeBrush(string key) => (WpfBrush)FindResource(key);
+
+    private void CapturePreviewWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        UiMotion.Reveal(PreviewHeader);
+        UiMotion.Reveal(PreviewStage, 45);
+        UiMotion.Reveal(TimelinePanel, 100);
     }
 
     private void CapturePreviewWindow_Closed(object? sender, EventArgs e)

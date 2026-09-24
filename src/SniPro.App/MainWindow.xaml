@@ -3,88 +3,118 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Icon="Assets/SniProIcon.ico"
         Title="{DynamicResource SettingsWindowTitle}"
-        Height="560"
-        Width="560"
-        MinHeight="560"
-        MinWidth="560"
-        ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen">
-    <Grid Margin="24">
+        Width="690" Height="735" MinWidth="620" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource CanvasBrush}"
+        Foreground="{StaticResource InkBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        IsVisibleChanged="MainWindow_IsVisibleChanged">
+    <Grid Margin="24,20,24,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="16" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="24" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <TextBlock FontSize="26"
-                       FontWeight="SemiBold"
-                       Text="{DynamicResource AppSettingsTitle}" />
-            <TextBlock x:Name="VersionText"
-                       Margin="12,10,0,0"
-                       VerticalAlignment="Center"
-                       Foreground="Gray" />
-        </StackPanel>
+        <Border x:Name="SettingsHeader" Grid.Row="0" Background="{StaticResource AccentWashBrush}" CornerRadius="16" Padding="18" Margin="0,0,0,18">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Border Width="48" Height="48" Background="White" CornerRadius="14" Margin="0,0,14,0">
+                    <Image Source="Assets/SniProIcon.png" Width="36" Height="36" Stretch="Uniform" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontSize="22" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display, Segoe UI" Text="{DynamicResource AppSettingsTitle}" />
+                    <TextBlock Margin="0,3,0,0" FontSize="12" Foreground="{StaticResource MutedBrush}" Text="{DynamicResource SettingsSubtitle}" />
+                </StackPanel>
+                <Border Grid.Column="2" Background="White" CornerRadius="9" Padding="10,5" VerticalAlignment="Top">
+                    <TextBlock x:Name="VersionText" FontSize="11" Foreground="{StaticResource MutedBrush}" />
+                </Border>
+            </Grid>
+        </Border>
 
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel x:Name="SettingsContent" Margin="0,0,6,0">
+                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="{DynamicResource OutputSectionTitle}" />
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,5,0,14" Text="{DynamicResource OutputSectionDescription}" TextWrapping="Wrap" />
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBox x:Name="OutputDirectoryTextBox" Grid.Column="0" Style="{StaticResource SoftTextBoxStyle}" Margin="0,0,8,0" ToolTip="{DynamicResource OutputDirectoryLabel}" />
+                            <Button x:Name="BrowseButton" Grid.Column="1" Style="{StaticResource SoftButtonStyle}" Content="{DynamicResource BrowseButton}" Click="BrowseButton_Click" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource OutputDirectoryLabel}" />
-            <TextBox x:Name="OutputDirectoryTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,8,12" />
-            <Button x:Name="BrowseButton" Grid.Row="0" Grid.Column="2" Margin="0,0,0,12" Padding="12,4" Content="{DynamicResource BrowseButton}" Click="BrowseButton_Click" />
+                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="{DynamicResource CaptureSectionTitle}" />
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,5,0,16" Text="{DynamicResource CaptureSectionDescription}" TextWrapping="Wrap" />
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource FrameRateLabel}" />
+                                <TextBox x:Name="FrameRateTextBox" Style="{StaticResource SoftTextBoxStyle}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource ScaleLabel}" />
+                                <TextBox x:Name="ScalePercentTextBox" Style="{StaticResource SoftTextBoxStyle}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource MaxColorsLabel}" />
+                                <ComboBox x:Name="MaxColorsComboBox" Style="{StaticResource SoftComboBoxStyle}" ItemContainerStyle="{StaticResource SoftComboBoxItemStyle}" />
+                            </StackPanel>
+                        </Grid>
+                        <Border Margin="0,18,0,0" Padding="13,11" Background="{StaticResource CanvasBrush}" CornerRadius="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock FontSize="13" FontWeight="SemiBold" Text="{DynamicResource EnableDithering}" />
+                                    <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,3,0,0" Text="{DynamicResource DitheringDescription}" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <CheckBox x:Name="EnableDitheringCheckBox" Grid.Column="1" Style="{StaticResource SoftCheckBoxStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource EnableDithering}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource FrameRateLabel}" />
-            <TextBox x:Name="FrameRateTextBox" Grid.Row="1" Grid.Column="1" Width="100" HorizontalAlignment="Left" Margin="0,0,0,12" />
+                <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20" Margin="0,0,0,2">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="{DynamicResource BehaviorSectionTitle}" />
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,5,0,16" Text="{DynamicResource BehaviorSectionDescription}" TextWrapping="Wrap" />
+                        <CheckBox x:Name="StartWithWindowsCheckBox" Style="{StaticResource SoftCheckBoxStyle}" Content="{DynamicResource StartWithWindows}" Margin="0,0,0,17" />
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource CaptureHotkeyLabel}" />
+                                <TextBox x:Name="CaptureHotkeyTextBox" Style="{StaticResource SoftTextBoxStyle}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,7" Text="{DynamicResource LanguageLabel}" />
+                                <ComboBox x:Name="LanguageComboBox" Style="{StaticResource SoftComboBoxStyle}" ItemContainerStyle="{StaticResource SoftComboBoxItemStyle}" SelectedValuePath="Tag">
+                                    <ComboBoxItem Tag="system" Content="{DynamicResource LanguageSystem}" />
+                                    <ComboBoxItem Tag="en-US" Content="{DynamicResource LanguageEnglish}" />
+                                    <ComboBoxItem Tag="zh-CN" Content="{DynamicResource LanguageSimplifiedChinese}" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource ScaleLabel}" />
-            <TextBox x:Name="ScalePercentTextBox" Grid.Row="2" Grid.Column="1" Width="100" HorizontalAlignment="Left" Margin="0,0,0,12" />
-
-            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource MaxColorsLabel}" />
-            <ComboBox x:Name="MaxColorsComboBox" Grid.Row="3" Grid.Column="1" Width="110" HorizontalAlignment="Left" Margin="0,0,0,12" />
-
-            <CheckBox x:Name="EnableDitheringCheckBox" Grid.Row="4" Grid.Column="1" Margin="0,0,0,4" Content="{DynamicResource EnableDithering}" />
-
-            <TextBlock Grid.Row="5" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource StartupLabel}" />
-            <CheckBox x:Name="StartWithWindowsCheckBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,12" VerticalAlignment="Center" Content="{DynamicResource StartWithWindows}" />
-
-            <TextBlock Grid.Row="6" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource CaptureHotkeyLabel}" />
-            <TextBox x:Name="CaptureHotkeyTextBox" Grid.Row="6" Grid.Column="1" Width="160" HorizontalAlignment="Left" Margin="0,0,0,12" />
-
-            <TextBlock Grid.Row="7" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Center" Text="{DynamicResource LanguageLabel}" />
-            <ComboBox x:Name="LanguageComboBox" Grid.Row="7" Grid.Column="1" Width="160" HorizontalAlignment="Left" Margin="0,0,0,12" SelectedValuePath="Tag">
-                <ComboBoxItem Tag="system" Content="{DynamicResource LanguageSystem}" />
-                <ComboBoxItem Tag="en-US" Content="{DynamicResource LanguageEnglish}" />
-                <ComboBoxItem Tag="zh-CN" Content="{DynamicResource LanguageSimplifiedChinese}" />
-            </ComboBox>
-        </Grid>
-
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="ResetButton" Margin="8,0,0,0" Padding="16,6" Content="{DynamicResource ResetButton}" Click="ResetButton_Click" />
-            <Button x:Name="SaveButton" Margin="8,0,0,0" Padding="16,6" Content="{DynamicResource SaveButton}" Click="SaveButton_Click" />
-            <Button x:Name="CloseButton" Margin="8,0,0,0" Padding="16,6" Content="{DynamicResource CloseButton}" Click="CloseButton_Click" />
-        </StackPanel>
-
-        <TextBlock x:Name="StatusText"
-                   Grid.Row="5"
-                   Margin="0,12,0,0"
-                   Foreground="Gray"
-                   TextWrapping="Wrap" />
+        <Border Grid.Row="2" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,15,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="ResetButton" Style="{StaticResource SoftButtonStyle}" Content="{DynamicResource ResetButton}" Click="ResetButton_Click" />
+                    <Button x:Name="CloseButton" Style="{StaticResource SoftButtonStyle}" Margin="8,0,0,0" Content="{DynamicResource CloseButton}" Click="CloseButton_Click" />
+                    <Button x:Name="SaveButton" Style="{StaticResource AccentButtonStyle}" Margin="8,0,0,0" MinWidth="90" Content="{DynamicResource SaveButton}" Click="SaveButton_Click" />
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

@@ -12,6 +12,7 @@
         ShowActivated="True"
         Topmost="True"
         Focusable="True"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
         KeyDown="CaptureOverlayWindow_KeyDown">
     <Grid x:Name="OverlayRoot"
           Background="Transparent"
@@ -19,7 +20,7 @@
           MouseMove="OverlayRoot_MouseMove"
           MouseLeftButtonUp="OverlayRoot_MouseLeftButtonUp">
         <Path x:Name="DimOverlayPath"
-              Fill="#66000000"
+              Fill="#880F0B19"
               IsHitTestVisible="False" />
 
         <Canvas x:Name="OverlayCanvas"
@@ -27,33 +28,51 @@
             <Rectangle x:Name="SelectionRectangle"
                        Visibility="Collapsed"
                        Fill="Transparent"
-                       Stroke="White"
+                       Stroke="#D9C2FF"
                        StrokeThickness="2" />
 
             <Border x:Name="SelectionInfoBorder"
                     Visibility="Collapsed"
-                    Background="#CC000000"
-                    CornerRadius="3"
-                    Padding="8,4">
+                    Background="#E9231B30"
+                    BorderBrush="#886E528B"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="10,6">
                 <TextBlock x:Name="SelectionInfoText"
-                           Foreground="White" />
+                           Foreground="White"
+                           FontSize="12"
+                           FontWeight="SemiBold" />
             </Border>
         </Canvas>
 
         <Canvas x:Name="ControlCanvas"
                 Panel.ZIndex="20">
-            <TextBlock x:Name="HintText"
-                       Padding="16,8"
-                       MaxWidth="1200"
-                       Foreground="White"
-                       Background="#99000000"
-                       Text="{DynamicResource CaptureOverlayHint}"
-                       TextAlignment="Center"
-                       TextWrapping="Wrap"
-                       IsHitTestVisible="False" />
+            <Border x:Name="HintBorder"
+                    Padding="17,10"
+                    MaxWidth="1200"
+                    Background="#E9231B30"
+                    BorderBrush="#665C456F"
+                    BorderThickness="1"
+                    CornerRadius="11"
+                    IsHitTestVisible="False">
+                <TextBlock x:Name="HintText"
+                           Foreground="White"
+                           FontSize="12"
+                           FontWeight="Medium"
+                           Text="{DynamicResource CaptureOverlayHint}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <Ellipse x:Name="RecordingDot"
+                     Width="8" Height="8"
+                     Fill="#FF737B"
+                     Visibility="Collapsed"
+                     IsHitTestVisible="False" />
 
             <Button x:Name="StartRecordingButton"
-                    Padding="18,8"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Padding="18,9"
                     Visibility="Collapsed"
                     Content="{DynamicResource StartRecordingButton}"
                     Click="StartRecordingButton_Click" />
@@ -62,41 +81,41 @@
         <Canvas x:Name="HandleCanvas"
                 Panel.ZIndex="15"
                 Background="Transparent">
-            <Rectangle x:Name="TopLeftHandle"
+            <Ellipse x:Name="TopLeftHandle"
                        Tag="TopLeft"
-                       Width="10"
-                       Height="10"
+                       Width="12"
+                       Height="12"
                        Visibility="Collapsed"
                        Fill="White"
-                       Stroke="Black"
-                       StrokeThickness="1"
+                       Stroke="#7350AE"
+                       StrokeThickness="2"
                        MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
-            <Rectangle x:Name="TopRightHandle"
+            <Ellipse x:Name="TopRightHandle"
                        Tag="TopRight"
-                       Width="10"
-                       Height="10"
+                       Width="12"
+                       Height="12"
                        Visibility="Collapsed"
                        Fill="White"
-                       Stroke="Black"
-                       StrokeThickness="1"
+                       Stroke="#7350AE"
+                       StrokeThickness="2"
                        MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
-            <Rectangle x:Name="BottomLeftHandle"
+            <Ellipse x:Name="BottomLeftHandle"
                        Tag="BottomLeft"
-                       Width="10"
-                       Height="10"
+                       Width="12"
+                       Height="12"
                        Visibility="Collapsed"
                        Fill="White"
-                       Stroke="Black"
-                       StrokeThickness="1"
+                       Stroke="#7350AE"
+                       StrokeThickness="2"
                        MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
-            <Rectangle x:Name="BottomRightHandle"
+            <Ellipse x:Name="BottomRightHandle"
                        Tag="BottomRight"
-                       Width="10"
-                       Height="10"
+                       Width="12"
+                       Height="12"
                        Visibility="Collapsed"
                        Fill="White"
-                       Stroke="Black"
-                       StrokeThickness="1"
+                       Stroke="#7350AE"
+                       StrokeThickness="2"
                        MouseLeftButtonDown="ResizeHandle_MouseLeftButtonDown" />
         </Canvas>
     </Grid>
