@@ -54,6 +54,7 @@
     <sys:String x:Key="CaptureOverlayTitle">Select capture region</sys:String>
     <sys:String x:Key="CaptureOverlayHint">Drag to select a region, adjust the corners, then click Start recording. Press Esc to cancel.</sys:String>
     <sys:String x:Key="CaptureOverlayRecordingHint">Recording. Click Stop recording or press Enter to finish.</sys:String>
+    <sys:String x:Key="CaptureOverlayFinishingHint">Finishing the recording...</sys:String>
     <sys:String x:Key="StartRecordingButton">Start recording</sys:String>
     <sys:String x:Key="StopRecordingButton">Stop recording</sys:String>
     <sys:String x:Key="TrayRecordingFailed">Recording failed</sys:String>

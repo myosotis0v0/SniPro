@@ -54,6 +54,7 @@
     <sys:String x:Key="CaptureOverlayTitle">选择截屏区域</sys:String>
     <sys:String x:Key="CaptureOverlayHint">拖动选择区域，调整四角后点击“开始录制”。按 Esc 取消。</sys:String>
     <sys:String x:Key="CaptureOverlayRecordingHint">正在录制。点击“结束录制”或按 Enter 完成。</sys:String>
+    <sys:String x:Key="CaptureOverlayFinishingHint">正在完成录制，请稍候……</sys:String>
     <sys:String x:Key="StartRecordingButton">开始录制</sys:String>
     <sys:String x:Key="StopRecordingButton">结束录制</sys:String>
     <sys:String x:Key="TrayRecordingFailed">录制失败</sys:String>

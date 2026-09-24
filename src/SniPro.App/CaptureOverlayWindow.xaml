@@ -31,6 +31,13 @@
                        Stroke="#D9C2FF"
                        StrokeThickness="2" />
 
+            <Rectangle x:Name="RecordingOutline"
+                       Visibility="Collapsed"
+                       Fill="Transparent"
+                       Stroke="#FF8267"
+                       StrokeThickness="2"
+                       Opacity="0.9" />
+
             <Border x:Name="SelectionInfoBorder"
                     Visibility="Collapsed"
                     Background="#E9231B30"
