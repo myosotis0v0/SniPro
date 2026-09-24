@@ -26,9 +26,10 @@
 
         <Canvas x:Name="OverlayCanvas"
                 IsHitTestVisible="False">
+            <!-- A zero-alpha hole passes mouse-down to the app beneath a layered window. -->
             <Rectangle x:Name="SelectionRectangle"
                        Visibility="Collapsed"
-                       Fill="Transparent"
+                       Fill="#01000000"
                        Stroke="#D9C2FF"
                        StrokeThickness="2" />
 
