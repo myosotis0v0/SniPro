@@ -43,19 +43,41 @@
 
         <Border x:Name="TimelinePanel" Grid.Row="2" Margin="0,14,0,0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1" CornerRadius="15" Padding="20,15">
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,8" Text="{DynamicResource PreviewTrimTitle}" />
-                <Grid Grid.Row="1" Margin="0,0,0,3">
+                <Border x:Name="TimelineStrip" Grid.Row="1" Height="48" Margin="0,0,0,9" Background="#211C2B" CornerRadius="8" ClipToBounds="True" Cursor="Hand" ToolTip="{DynamicResource PreviewTimelineHint}" AutomationProperties.Name="{DynamicResource PreviewTimelineHint}" MouseLeftButtonDown="TimelineStrip_MouseLeftButtonDown">
+                    <Grid>
+                        <ItemsControl x:Name="TimelineThumbnails" IsHitTestVisible="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="1,0" ClipToBounds="True">
+                                        <Image Source="{Binding}" Stretch="UniformToFill" Height="48" RenderOptions.BitmapScalingMode="LowQuality" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Canvas x:Name="TimelineOverlay" IsHitTestVisible="False" SizeChanged="TimelineOverlay_SizeChanged">
+                            <Border x:Name="TimelineLeftShade" Height="48" Background="#880E0A18" />
+                            <Border x:Name="TimelineRightShade" Height="48" Background="#880E0A18" />
+                            <Border x:Name="TimelineRange" Height="48" BorderBrush="#D4BFFF" BorderThickness="2" CornerRadius="7" />
+                            <Border x:Name="TimelinePlayhead" Height="48" Width="3" Background="#FF8267" />
+                        </Canvas>
+                    </Grid>
+                </Border>
+                <Grid Grid.Row="2" Margin="0,0,0,3">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="130" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource PreviewStartFrame}" />
                     <Slider x:Name="StartFrameSlider" Grid.Column="1" Style="{StaticResource SoftSliderStyle}" Minimum="0" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="StartFrameSlider_ValueChanged" />
                 </Grid>
-                <Grid Grid.Row="2" Margin="0,0,0,3">
+                <Grid Grid.Row="3" Margin="0,0,0,3">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="130" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource PreviewEndFrame}" />
                     <Slider x:Name="EndFrameSlider" Grid.Column="1" Style="{StaticResource SoftSliderStyle}" Minimum="0" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="EndFrameSlider_ValueChanged" />
                 </Grid>
-                <Grid Grid.Row="3">
+                <Grid Grid.Row="4">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="130" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource FieldLabelStyle}" Text="{DynamicResource PreviewCurrentFrame}" />
                     <Slider x:Name="CurrentFrameSlider" Grid.Column="1" Style="{StaticResource SoftSliderStyle}" Minimum="0" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CurrentFrameSlider_ValueChanged" />

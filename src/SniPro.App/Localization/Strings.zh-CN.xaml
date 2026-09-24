@@ -13,6 +13,7 @@
     <sys:String x:Key="BehaviorSectionDescription">让 SniPro 随时待命，不占用桌面空间。</sys:String>
     <sys:String x:Key="PreviewSubtitle">检查画面并裁剪录制范围。</sys:String>
     <sys:String x:Key="PreviewTrimTitle">裁剪时间轴</sys:String>
+    <sys:String x:Key="PreviewTimelineHint">点击缩略图定位播放帧</sys:String>
     <sys:String x:Key="PreviewSaveHint">保存至设置目录，并复制 GIF 到剪切板。</sys:String>
     <sys:String x:Key="OutputDirectoryLabel">输出目录</sys:String>
     <sys:String x:Key="BrowseButton">浏览...</sys:String>

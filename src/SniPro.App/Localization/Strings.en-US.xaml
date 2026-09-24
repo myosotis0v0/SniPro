@@ -13,6 +13,7 @@
     <sys:String x:Key="BehaviorSectionDescription">Keep SniPro ready without occupying your desktop.</sys:String>
     <sys:String x:Key="PreviewSubtitle">Review your capture and trim the range.</sys:String>
     <sys:String x:Key="PreviewTrimTitle">Trim timeline</sys:String>
+    <sys:String x:Key="PreviewTimelineHint">Click a thumbnail to seek</sys:String>
     <sys:String x:Key="PreviewSaveHint">Save to your configured folder and copy the GIF.</sys:String>
     <sys:String x:Key="OutputDirectoryLabel">Output directory</sys:String>
     <sys:String x:Key="BrowseButton">Browse...</sys:String>

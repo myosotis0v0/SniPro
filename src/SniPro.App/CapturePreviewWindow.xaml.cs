@@ -4,6 +4,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SniPro.Windows;
@@ -60,6 +62,12 @@ public partial class CapturePreviewWindow : Window
         _currentFrame = _startFrame;
 
         InitializeComponent();
+        var thumbnailCount = Math.Min(8, _frameImages.Count);
+        TimelineThumbnails.ItemsSource = Enumerable.Range(0, thumbnailCount)
+            .Select(index => _frameImages[thumbnailCount == 1
+                ? 0
+                : (int)Math.Round(index * (_frameImages.Count - 1d) / (thumbnailCount - 1))])
+            .ToArray();
         _playTimer = new DispatcherTimer(
             DispatcherPriority.Render,
             Dispatcher)
@@ -113,6 +121,27 @@ public partial class CapturePreviewWindow : Window
         ApplySliderState(_startFrame, _endFrame, currentFrame);
     }
 
+    private void TimelineStrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var width = TimelineStrip.ActualWidth;
+        if (_isSaving || width <= 0)
+        {
+            return;
+        }
+
+        var position = Math.Clamp(e.GetPosition(TimelineStrip).X / width, 0, 0.999999);
+        var frame = Math.Min(_frameImages.Count - 1, (int)(position * _frameImages.Count));
+        _playTimer.Stop();
+        PlayButton.Content = _localization.Get("PreviewPlay");
+        ApplySliderState(_startFrame, _endFrame, Math.Clamp(frame, _startFrame, _endFrame));
+        e.Handled = true;
+    }
+
+    private void TimelineOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateTimelineVisuals();
+    }
+
     private void PlayButton_Click(object sender, RoutedEventArgs e)
     {
         if (_playTimer.IsEnabled)
@@ -149,6 +178,9 @@ public partial class CapturePreviewWindow : Window
         using var cancellation = new CancellationTokenSource();
         _saveCancellation = cancellation;
         _isSaving = true;
+        _playTimer.Stop();
+        PlayButton.Content = _localization.Get("PreviewPlay");
+        TimelinePanel.IsEnabled = false;
         SaveGifButton.IsEnabled = false;
         PlayButton.IsEnabled = false;
         CloseButton.IsEnabled = false;
@@ -213,6 +245,7 @@ public partial class CapturePreviewWindow : Window
             }
 
             _isSaving = false;
+            TimelinePanel.IsEnabled = true;
             SaveProgressBar.Visibility = Visibility.Collapsed;
             SaveGifButton.IsEnabled = true;
             PlayButton.IsEnabled = true;
@@ -324,6 +357,29 @@ public partial class CapturePreviewWindow : Window
             _frameImages.Count,
             _startFrame + 1,
             _endFrame + 1);
+        UpdateTimelineVisuals();
+    }
+
+    private void UpdateTimelineVisuals()
+    {
+        var width = TimelineOverlay.ActualWidth;
+        if (width <= 0)
+        {
+            return;
+        }
+
+        var frameCount = _frameImages.Count;
+        var selectedLeft = width * _startFrame / frameCount;
+        var selectedRight = width * (_endFrame + 1d) / frameCount;
+        TimelineLeftShade.Width = selectedLeft;
+        Canvas.SetLeft(TimelineLeftShade, 0);
+        TimelineRightShade.Width = Math.Max(0, width - selectedRight);
+        Canvas.SetLeft(TimelineRightShade, selectedRight);
+        TimelineRange.Width = Math.Max(2, selectedRight - selectedLeft);
+        Canvas.SetLeft(TimelineRange, selectedLeft);
+        Canvas.SetLeft(
+            TimelinePlayhead,
+            Math.Clamp(width * (_currentFrame + 0.5) / frameCount - 1.5, 0, Math.Max(0, width - 3)));
     }
 
     private static BitmapImage CreateBitmapImage(DrawingBitmap frame)
